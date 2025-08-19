@@ -1,125 +1,201 @@
-# Event Manager App
+# 🚀 Event Manager App
 
-A comprehensive Event Management Application built with React Native Web, providing professional event planning and management capabilities.
+Eine umfassende Event-Management-Anwendung mit React Native Web, TypeScript und moderner UI-Architektur.
 
-## Features
+## ✨ Features
 
-- **Project Management**: Create, track, and manage events from idea to completion
-- **BOM Management**: Bill of Materials hierarchy and import functionality
-- **Supplier Matching**: Procurement and vendor management
-- **Permits Management**: Regulatory compliance and approval tracking
-- **Logistics Planning**: Transportation and resource scheduling
-- **Master Data Management**: Centralized data repository
-- **Reporting & Analytics**: Comprehensive reporting tools
-- **File Management**: Document storage and organization
-- **Calendar Integration**: Event scheduling and timeline management
+### 🎯 Event Management
+- **Vollständige CRUD-Operationen** für Events
+- **Event-Typen und Kategorien** (Konferenz, Workshop, Seminar, etc.)
+- **Teilnehmer-Management** mit Rollen und Status
+- **Event-Kalender** und Zeitplanung
+- **Budget-Tracking** und Kostenkontrolle
 
-## Tech Stack
+### 🔄 Real-Time Updates
+- **WebSocket-Integration** für Live-Updates
+- **Echtzeit-Benachrichtigungen** für alle Service-Operationen
+- **Connection-Monitoring** und Statistiken
+- **Automatische Wiederverbindung** bei Verbindungsverlust
 
-- **Frontend**: React 18 + TypeScript
-- **UI Framework**: React Native Web
-- **Styling**: Tailwind CSS with custom design system
-- **State Management**: React Context API
-- **Icons**: Lucide React
-- **Build Tool**: Create React App
+### 📊 Projekt-Management
+- **Projekt-Dashboard** mit Übersicht
+- **BOM-Struktur** (Bill of Materials)
+- **Beschaffung** und Lieferanten-Management
+- **Genehmigungsverfahren** und Dokumentation
+- **Logistik** und Transport
+- **Finanzen** und Budget-Tracking
 
-## Prerequisites
+### 🎨 Moderne UI
+- **Responsive Design** mit Tailwind CSS
+- **Komponenten-basierte Architektur** mit shadcn/ui
+- **TypeScript** für bessere Entwicklererfahrung
+- **Accessibility** und Barrierefreiheit
 
-- Node.js 16+ 
-- npm or yarn package manager
+## 🛠️ Technologie-Stack
 
-## Installation
+- **Frontend**: React 18 + TypeScript + React Native Web
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State Management**: React Context + Hooks
+- **Real-Time**: WebSocket + Event-Driven Architecture
+- **Build Tools**: React Scripts + Webpack
+- **Package Manager**: npm
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Event-Manager-App
-   ```
+## 🚀 Installation
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### Voraussetzungen
+- Node.js 18+ 
+- npm 8+
 
-3. **Start the development server**
-   ```bash
-   npm start
-   ```
-
-4. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## Available Scripts
-
-- `npm start` - Start development server
-- `npm run build` - Build for production
-- `npm test` - Run tests
-- `npm run web` - Start web development server
-- `npm run android` - Run on Android (requires React Native setup)
-- `npm run ios` - Run on iOS (requires React Native setup)
-
-## Project Structure
-
-```
-Event-Manager-App/
-├── components/           # React components
-│   ├── ui/              # Reusable UI components
-│   ├── AppContext.tsx   # Application state management
-│   ├── NewLayout.tsx    # Main layout component
-│   └── ...              # Feature-specific components
-├── styles/               # Global styles and CSS variables
-├── public/               # Static assets and HTML template
-├── App.tsx              # Main application component
-├── index.js             # Application entry point
-└── package.json         # Dependencies and scripts
+### 1. Repository klonen
+```bash
+git clone <repository-url>
+cd event-manager-app
 ```
 
-## Key Components
+### 2. Abhängigkeiten installieren
+```bash
+npm install
+```
 
-### AppContext
-Central state management for projects, navigation, and application state.
+### 3. Umgebungsvariablen konfigurieren
+```bash
+cp env.example .env.local
+```
 
-### NewLayout
-Main layout component with sidebar navigation and responsive design.
+Bearbeiten Sie `.env.local` und fügen Sie Ihre Konfiguration hinzu:
+```env
+REACT_APP_API_URL=http://localhost:3001/api
+REACT_APP_WS_URL=ws://localhost:3001/events
+```
 
-### Global Dashboard
-Overview of all projects and system-wide metrics.
+### 4. Anwendung starten
+```bash
+npm start
+```
 
-### Project Management
-Individual project views with specialized tools for each project phase.
+Die Anwendung läuft dann unter `http://localhost:3000`
 
-## Development
+## 📁 Projektstruktur
 
-The application uses a modular component architecture with:
-- **Context-based state management** for global state
-- **Component composition** for flexible layouts
-- **Tailwind CSS** for consistent styling
-- **TypeScript** for type safety
+```
+event-manager-app/
+├── src/                    # Hauptquellcode
+│   └── index.tsx          # Einstiegspunkt
+├── components/             # React-Komponenten
+│   ├── ui/                # UI-Bibliothek (shadcn/ui)
+│   ├── EventManager.tsx   # Event-Management
+│   ├── RealTimeUpdates.tsx # Real-Time Updates
+│   └── ...                # Weitere Komponenten
+├── types/                  # TypeScript-Typen
+│   └── event.ts           # Event-bezogene Typen
+├── lib/                    # Utility-Funktionen
+│   └── utils.ts           # CSS-Klassen-Helper
+├── styles/                 # Globale Styles
+│   └── globals.css        # Tailwind CSS
+└── public/                 # Statische Assets
+```
 
-## Building for Production
+## 🔧 Entwicklung
 
+### Verfügbare Scripts
+
+```bash
+# Entwicklungsserver starten
+npm start
+
+# Production-Build erstellen
+npm run build
+
+# Tests ausführen
+npm test
+
+# Code-Build für Eject
+npm run eject
+```
+
+### Code-Qualität
+
+- **TypeScript strict mode** aktiviert
+- **ESLint** für Code-Qualität
+- **Prettier** für Code-Formatierung
+- **Tailwind CSS** für konsistentes Styling
+
+## 🌐 API-Integration
+
+Die Anwendung ist für die Integration mit einem Backend-API vorbereitet:
+
+- **RESTful API** für CRUD-Operationen
+- **WebSocket** für Real-Time Updates
+- **JWT-Authentifizierung** unterstützt
+- **Error Handling** und Retry-Logic
+
+## 📱 Responsive Design
+
+- **Mobile-First** Ansatz
+- **Breakpoint-optimiert** für alle Bildschirmgrößen
+- **Touch-freundlich** für mobile Geräte
+- **Progressive Web App** (PWA) bereit
+
+## 🔒 Sicherheit
+
+- **JWT-Token-basierte Authentifizierung**
+- **CSRF-Schutz** implementiert
+- **Input-Validierung** mit TypeScript
+- **XSS-Schutz** durch React
+
+## 🚀 Deployment
+
+### Production Build
 ```bash
 npm run build
 ```
 
-This creates an optimized production build in the `build/` directory.
+### Docker (optional)
+```bash
+docker build -f Dockerfile.frontend -t event-manager-frontend .
+docker run -p 3000:3000 event-manager-frontend
+```
 
-## Mobile Development
+## 🤝 Beitragen
 
-To run on mobile devices:
+1. Fork des Repositories
+2. Feature-Branch erstellen (`git checkout -b feature/amazing-feature`)
+3. Änderungen committen (`git commit -m 'Add amazing feature'`)
+4. Branch pushen (`git push origin feature/amazing-feature`)
+5. Pull Request erstellen
 
-1. **Android**: `npm run android`
-2. **iOS**: `npm run ios`
+## 📄 Lizenz
 
-Note: Mobile development requires additional React Native CLI setup.
+Dieses Projekt steht unter der MIT-Lizenz. Siehe [LICENSE](LICENSE) für Details.
 
-## Contributing
+## 🆘 Support
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+Bei Fragen oder Problemen:
 
-## License
+- **Issues**: GitHub Issues verwenden
+- **Dokumentation**: Siehe `/docs` Verzeichnis
+- **Community**: Diskussionsforum beitreten
 
-This project is proprietary software. All rights reserved.
+## 🎯 Roadmap
+
+### Phase 1: Core Features ✅
+- [x] Event-Management-System
+- [x] Real-Time Updates
+- [x] Grundlegende UI-Komponenten
+- [x] TypeScript-Integration
+
+### Phase 2: Erweiterte Features 🔄
+- [ ] Benutzer-Authentifizierung
+- [ ] Erweiterte Berichte
+- [ ] Mobile App (React Native)
+- [ ] Offline-Funktionalität
+
+### Phase 3: Enterprise Features ⏳
+- [ ] Multi-Tenant-Support
+- [ ] Erweiterte Workflows
+- [ ] API-Gateway
+- [ ] Microservices-Architektur
+
+---
+
+**Entwickelt mit ❤️ und modernen Web-Technologien**
