@@ -15,6 +15,8 @@ import { MasterDataManager } from './components/MasterDataManager';
 import { ReportsManager } from './components/ReportsManager';
 import { FileManager } from './components/FileManager';
 import { CalendarManager } from './components/CalendarManager';
+import { EventManager } from './components/EventManager';
+import { RealTimeUpdates } from './components/RealTimeUpdates';
 
 function AppContent() {
   const { currentProject, globalView, projectView } = useApp();
@@ -81,6 +83,10 @@ function AppContent() {
           return <GlobalDashboard onNewProject={() => setShowProjectWizard(true)} />;
         case 'projects':
           return <ProjectsList onNewProject={() => setShowProjectWizard(true)} />;
+        case 'events':
+          return <EventManager />;
+        case 'real-time':
+          return <RealTimeUpdates />;
         case 'master-data':
           return <MasterDataManager />;
         case 'calendar':
