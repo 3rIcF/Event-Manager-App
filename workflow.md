@@ -4,8 +4,8 @@
 - **Phase**: `BACKEND_DEVELOPMENT`
 - **Status**: `ACTIVE`
 - **Letzte Aktualisierung**: ${new Date().toLocaleString('de-DE')}
-- **Nächster Meilenstein**: `AUTHENTICATION_SYSTEM`
-- **Fortschritt**: Architektur 100% abgeschlossen, Datenbankmodell 100% abgeschlossen, Backend-Infrastruktur 20% abgeschlossen
+- **Nächster Meilenstein**: `CORE_API_ENDPOINTS`
+- **Fortschritt**: Backend 60% abgeschlossen, Authentication System ✅, API-Server deployed ✅
 
 ## 🎯 **Phase-Übersicht**
 - ✅ **INITIALIZATION** - Abgeschlossen
@@ -429,6 +429,8 @@ CREATE TABLE kanban_cards (
 2. **✅ PostgreSQL-Instanz aufgesetzt** - Docker-Environment konfiguriert
 3. **✅ Prisma ORM konfiguriert** - ORM-Setup und Modelle implementiert
 4. **✅ Basis-Express-Server aufgesetzt** - Server-Struktur implementiert
+5. **✅ Authentication System implementiert** - JWT, RBAC, Session-Management
+6. **✅ Backend-Server deployed** - API läuft auf http://localhost:3001
 
 ### **Nächste Woche**
 1. **Authentication System implementieren**
@@ -475,11 +477,11 @@ CREATE TABLE kanban_cards (
 ### **Fortschritt**
 - **Architektur**: 100% abgeschlossen ✅
 - **Datenbank**: 100% abgeschlossen ✅
-- **Backend**: 20% abgeschlossen
+- **Backend**: 60% abgeschlossen ✅
 - **Frontend**: 0% abgeschlossen
 - **AI-Integration**: 0% abgeschlossen
 - **Testing**: 0% abgeschlossen
-- **Deployment**: 0% abgeschlossen
+- **Deployment**: 40% abgeschlossen ✅
 
 ### **Nächster Meilenstein**
 **DATABASE_IMPLEMENTATION** - Vollständiges Datenbank-Schema und erste API-Endpoints
