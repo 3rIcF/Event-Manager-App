@@ -1,0 +1,203 @@
+agent:
+  mode: autonomous                  # Agent agiert selbstständig, fragt selten zurück
+  feedback_frequency: minimal       # Nur bei Problemen/Fortschritt/Ergebnissen Rückmeldung
+  step_size: large                  # Arbeitet in sinnvollen, nicht zu kleinen Blöcken
+  internal_reasoning: true          # Nutzt internes Nachdenken, gibt nicht jeden Zwischenschritt preis
+  output_mode: block                # Ausgabe am Stück statt einzelner Zeilen
+  test_and_validate: true           # Testet/verifiziert vor Ausgabe selbständig
+  logging: errors_only              # Loggt nur bei Fehlern (kein Trivial-Output)
+  retry_on_fail: 3                  # Versucht fehlerhafte Tasks automatisch bis zu 3 Mal neu
+  confirmation_required: false      # Benötigt keine Bestätigung nach einzelnen Schritten
+  allow_self_correction: true       # Erkennt und bessert eigene Fehler ohne Rückfrage aus
+  prompt_style: natural             # Formuliert Antworten und Code natürlich/flüssig
+  output_language: de               # Arbeitet und kommentiert auf Deutsch (änderbar)
+
+  # Strategische Planung & Effizienz
+  planning_strategy: high_level_first # Erstellt zuerst einen Gesamtplan, bevor er Details implementiert
+  parallelize_tasks: true           # Führt unabhängige Aufgaben parallel aus, um Zeit zu sparen
+
+  # Kontextverständnis & Projekt-Bewusstsein
+  context:
+    repository_map: full            # Erstellt eine vollständige "Karte" des Projekts für besseres Verständnis
+    auto_include_files:             # Lädt diese Dateien immer als Grundkontext
+      - README.md
+      - package.json
+      - .env.example
+      - architecture.md
+      - cursor_agent.yaml
+    knowledge_sources:              # Konsultiert externe Quellen für Best Practices
+      - https://react.dev/reference/react
+      - https://docs.python.org/3/
+
+  quality:
+    linting: true                   # Lintet Code automatisch
+    docstrings: true                # Fügt wo möglich kompakte Dokumentation an
+    comments: important_only        # Kommentiert nur relevante Stellen
+    min_robustness: high            # Vermeidet fragile Workarounds
+    validation_strategy: multi_pass # Prüft eigenen Code mehrfach aus verschiedenen Perspektiven
+
+  timeouts:
+    inactivity_prompt_seconds: 30  # Schaut nach 30 Sekunden Inaktivität proaktiv nach dem nächsten Schritt
+
+# 🚀 **Erweiterte Autonomie-Konfiguration**
+
+## **Intelligente Entscheidungsfindung**
+decision_making:
+  confidence_threshold: 0.8         # Mindestvertrauen für autonome Entscheidungen
+  fallback_strategy: ask_user      # Bei Unsicherheit: Benutzer fragen
+  risk_assessment: automatic        # Bewertet Risiken automatisch
+  context_awareness: high           # Berücksichtigt Projekt-Kontext bei Entscheidungen
+
+## **Proaktive Problemlösung**
+problem_solving:
+  auto_diagnose: true               # Diagnostiziert Probleme automatisch
+  solution_generation: multiple     # Generiert mehrere Lösungsansätze
+  best_practice_enforcement: true   # Erzwingt Best Practices
+  dependency_analysis: automatic    # Analysiert Abhängigkeiten automatisch
+
+## **Code-Qualität & Wartung**
+code_quality:
+  refactoring_threshold: medium     # Refactoring bei mittlerer Komplexität
+  technical_debt_detection: true    # Erkennt technische Schulden
+  performance_optimization: auto    # Optimiert Performance automatisch
+  security_audit: basic             # Führt grundlegende Sicherheitsprüfungen durch
+
+## **Projekt-Management**
+project_management:
+  milestone_tracking: true          # Verfolgt Projekt-Meilensteine
+  dependency_resolution: automatic  # Löst Abhängigkeiten automatisch
+  conflict_detection: true          # Erkennt Konflikte zwischen Änderungen
+  rollback_strategy: smart          # Intelligente Rollback-Strategien
+
+## **Lernfähigkeit & Anpassung**
+learning:
+  pattern_recognition: true         # Erkennt wiederkehrende Muster
+  solution_memory: true             # Merkt sich erfolgreiche Lösungen
+  context_adaptation: true          # Passt sich an Projekt-Kontext an
+  best_practice_learning: true      # Lernt aus Best Practices
+
+## **Kommunikation & Reporting**
+communication:
+  progress_reporting: milestone     # Berichtet bei Meilensteinen
+  issue_escalation: automatic       # Eskaliert Probleme automatisch
+  success_celebration: true         # Feiert Erfolge
+  learning_insights: true           # Teilt Erkenntnisse mit
+
+## **Fehlerbehandlung & Recovery**
+error_handling:
+  graceful_degradation: true       # Graceful Degradation bei Fehlern
+  automatic_recovery: true          # Automatische Wiederherstellung
+  error_pattern_learning: true      # Lernt aus Fehlermustern
+  preventive_maintenance: true      # Präventive Wartung
+
+## **Performance & Skalierung**
+performance:
+  resource_optimization: true       # Optimiert Ressourcenverbrauch
+  parallel_processing: true         # Parallele Verarbeitung wo möglich
+  memory_management: smart          # Intelligente Speicherverwaltung
+  cache_strategy: adaptive          # Adaptive Cache-Strategien
+
+## **Sicherheit & Compliance**
+security:
+  vulnerability_scanning: basic     # Grundlegende Schwachstellen-Scans
+  code_signing: automatic           # Automatische Code-Signierung
+  access_control: role_based        # Rollenbasierte Zugriffskontrolle
+  audit_trail: comprehensive        # Umfassende Audit-Spuren
+
+## **Integration & APIs**
+integration:
+  api_version_management: true     # Verwaltet API-Versionen
+  backward_compatibility: enforce   # Erzwingt Rückwärtskompatibilität
+  rate_limiting: adaptive           # Adaptive Rate-Limiting
+  circuit_breaker: automatic        # Automatische Circuit-Breaker
+
+## **Monitoring & Observability**
+monitoring:
+  health_checks: automatic          # Automatische Gesundheitsprüfungen
+  performance_metrics: real_time    # Echtzeit-Performance-Metriken
+  alerting: intelligent             # Intelligente Benachrichtigungen
+  log_aggregation: centralized      # Zentrale Log-Aggregation
+
+## **Deployment & DevOps**
+deployment:
+  blue_green_deployment: true      # Blue-Green Deployments
+  canary_releases: automatic        # Automatische Canary-Releases
+  rollback_automation: true         # Automatische Rollbacks
+  environment_management: automatic # Automatische Umgebungsverwaltung
+
+## **Datenbank & Persistenz**
+database:
+  migration_automation: true        # Automatische Datenbank-Migrationen
+  backup_strategy: intelligent      # Intelligente Backup-Strategien
+  performance_tuning: automatic     # Automatische Performance-Optimierung
+  data_integrity: enforce           # Erzwingt Datenintegrität
+
+## **Testing & Qualitätssicherung**
+testing:
+  test_generation: automatic        # Automatische Test-Generierung
+  coverage_optimization: true       # Test-Coverage-Optimierung
+  mutation_testing: selective       # Selektive Mutation-Tests
+  performance_testing: automatic    # Automatische Performance-Tests
+
+## **Dokumentation & Wissensmanagement**
+documentation:
+  auto_generation: true             # Automatische Dokumentationsgenerierung
+  api_documentation: interactive    # Interaktive API-Dokumentation
+  code_examples: contextual         # Kontextuelle Code-Beispiele
+  knowledge_graph: automatic        # Automatischer Wissensgraph
+
+## **Lokalisierung & Internationalisierung**
+localization:
+  multi_language_support: true     # Mehrsprachige Unterstützung
+  cultural_adaptation: automatic    # Automatische kulturelle Anpassung
+  timezone_handling: smart          # Intelligente Zeitzonenbehandlung
+  currency_formatting: automatic    # Automatische Währungsformatierung
+
+## **Barrierefreiheit & Inklusion**
+accessibility:
+  wcag_compliance: enforce          # Erzwingt WCAG-Compliance
+  screen_reader_optimization: true  # Screen-Reader-Optimierung
+  keyboard_navigation: enforce      # Erzwingt Tastaturnavigation
+  color_contrast_validation: true   # Farbkontrast-Validierung
+
+## **Mobile & Responsive Design**
+mobile:
+  responsive_design: enforce        # Erzwingt responsives Design
+  touch_optimization: true          # Touch-Optimierung
+  offline_capability: true          # Offline-Fähigkeit
+  progressive_web_app: true         # Progressive Web App-Features
+
+## **Analytics & Benutzerverhalten**
+analytics:
+  user_behavior_tracking: privacy_first # Datenschutzfreundliches Tracking
+  performance_monitoring: real_time      # Echtzeit-Performance-Überwachung
+  conversion_optimization: automatic     # Automatische Conversion-Optimierung
+  a_b_testing: intelligent               # Intelligente A/B-Tests
+
+## **Machine Learning & KI-Integration**
+ai_integration:
+  recommendation_engine: true       # Empfehlungs-Engine
+  predictive_analytics: true        # Prädiktive Analytik
+  natural_language_processing: true # Verarbeitung natürlicher Sprache
+  computer_vision: selective         # Selektive Computer-Vision
+
+## **Blockchain & Web3**
+web3:
+  smart_contract_audit: true       # Smart Contract-Audits
+  decentralized_storage: optional   # Optionale dezentrale Speicherung
+  crypto_payment_integration: true  # Krypto-Zahlungsintegration
+  nft_support: optional             # Optionale NFT-Unterstützung
+
+## **IoT & Edge Computing**
+iot:
+  edge_computing: true              # Edge Computing-Unterstützung
+  sensor_data_processing: true      # Sensordatenverarbeitung
+  real_time_analytics: true         # Echtzeit-Analytik
+  device_management: automatic      # Automatische Geräteverwaltung
+
+## **Quantencomputing & Zukunftstechnologien**
+future_tech:
+  quantum_ready: false              # Quantencomputer-Bereitschaft
+  ai_ethics: enforce                # Erzwingt KI-Ethik
+  sustainable_computing: true       # Nachhaltiges Computing
+  research_integration: selective    # Selektive Forschungsintegration

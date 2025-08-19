@@ -1,0 +1,53 @@
+{
+  "name": "event-manager-ai-orchestrator",
+  "version": "1.0.0",
+  "description": "AI Orchestrator für Multi-Agent Projektmanagement der Event Manager App",
+  "main": "ai-orchestrator.js",
+  "scripts": {
+    "start": "node ai-orchestrator.js",
+    "status": "node ai-orchestrator.js status",
+    "phase:start": "node ai-orchestrator.js phase start",
+    "phase:complete": "node ai-orchestrator.js phase complete",
+    "phase:info": "node ai-orchestrator.js phase info",
+    "agent:list": "node ai-orchestrator.js agent list",
+    "agent:activate": "node ai-orchestrator.js agent activate",
+    "auto": "node ai-orchestrator.js auto",
+    "help": "node ai-orchestrator.js help",
+    "architect": "node agents/system-architect.js",
+    "security": "node agents/security-reviewer.js",
+    "test": "echo \"Tests werden implementiert\" && exit 0"
+  },
+  "keywords": [
+    "ai",
+    "orchestrator",
+    "multi-agent",
+    "project-management",
+    "event-manager",
+    "nestjs",
+    "react",
+    "typescript"
+  ],
+  "author": "Event Manager App Team",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "ora": "^5.4.1",
+    "table": "^6.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/event-manager-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/event-manager-app/issues"
+  },
+  "homepage": "https://github.com/your-org/event-manager-app#readme"
+}
