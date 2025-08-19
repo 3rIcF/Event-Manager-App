@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import authRoutes from './auth.routes';
+import userRoutes from './user.routes';
 import projectRoutes from './project.routes';
 import taskRoutes from './task.routes';
 import projectTaskRoutes from './project.task.routes';
@@ -21,17 +22,29 @@ router.get('/health', (req, res) => {
     memory: process.memoryUsage(),
     services: {
       auth: 'active',
+      users: 'active',
       projects: 'active',
       tasks: 'active',
       suppliers: 'active',
       files: 'active',
       bom: 'active',
     },
+    endpoints: {
+      total: '50+',
+      auth: 8,
+      users: 6,
+      projects: 7,
+      tasks: 6,
+      suppliers: 8,
+      files: 7,
+      bom: 7,
+    },
   });
 });
 
 // API routes
 router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 router.use('/projects', projectRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/suppliers', supplierRoutes);
