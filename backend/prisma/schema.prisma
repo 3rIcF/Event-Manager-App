@@ -15,7 +15,7 @@ model User {
   email     String   @unique
   name      String
   password  String
-  role      UserRole @default(USER)
+  role      String   @default("USER") // ADMIN, MANAGER, USER
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -35,7 +35,7 @@ model Project {
   startDate   DateTime
   endDate     DateTime
   location    String
-  status      ProjectStatus @default(IDEA)
+  status      String        @default("IDEA") // IDEA, PLANNING, APPROVAL, SETUP, LIVE, TEARDOWN, CLOSED
   budget      Float?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -56,7 +56,7 @@ model Project {
 
 model ProjectMember {
   id        String           @id @default(cuid())
-  role      ProjectMemberRole @default(MEMBER)
+  role      String            @default("MEMBER") // OWNER, MANAGER, MEMBER
   createdAt DateTime         @default(now())
   
   // Foreign Keys
@@ -75,7 +75,7 @@ model GlobalMaterial {
   category         String
   unit             String
   specs            String?
-  portfolio        String[] // JSON array as string
+  portfolio        String?  // JSON array as string
   standardLeadTime Int?
   version          Int      @default(1)
   createdAt        DateTime @default(now())
@@ -96,15 +96,15 @@ model GlobalMaterial {
 model ProjectMaterial {
   id               String            @id @default(cuid())
   quantity         Int
-  phase            MaterialPhase     @default(SETUP)
+  phase            String            @default("SETUP") // SETUP, SHOW, TEARDOWN
   location         String?
   deliveryTime     DateTime?
   pickupTime       DateTime?
-  needs            String[]          // JSON array as string
+  needs            String?           // JSON array as string
   specialPrice     Float?
   notes            String?
   hasOverride      Boolean           @default(false)
-  overriddenFields String[]          // JSON array as string
+  overriddenFields String?           // JSON array as string
   lastSyncVersion  Int               @default(1)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
@@ -125,8 +125,8 @@ model ProjectMaterial {
 model GlobalSupplier {
   id          String   @id @default(cuid())
   name        String
-  portfolio   String[] // JSON array as string
-  regions     String[] // JSON array as string
+  portfolio   String?  // JSON array as string
+  regions     String?  // JSON array as string
   email       String
   phone       String
   address     String
@@ -152,13 +152,13 @@ model ProjectSupplier {
   setupTime         DateTime?
   operationTime     DateTime?
   teardownTime      DateTime?
-  needs             String[]  // JSON array as string
+  needs             String?   // JSON array as string
   personnel         Int       @default(0)
-  vehicles          String[]  // JSON array as string
+  vehicles          String?   // JSON array as string
   onsiteContact     String?
   briefingGenerated Boolean   @default(false)
   hasOverride       Boolean   @default(false)
-  overriddenFields  String[]  // JSON array as string
+  overriddenFields  String?   // JSON array as string
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   
@@ -177,9 +177,9 @@ model ProjectSupplier {
 
 model Comment {
   id         String      @id @default(cuid())
-  entityType EntityType
+  entityType String      // MATERIAL, SUPPLIER, PROJECT
   entityId   String
-  scope      CommentScope
+  scope      String      // GLOBAL, PROJECT
   content    String
   createdAt  DateTime    @default(now())
   
@@ -200,10 +200,10 @@ model Comment {
 
 model DiffNotification {
   id        String                   @id @default(cuid())
-  entityType EntityType
+  entityType String                  // MATERIAL, SUPPLIER, PROJECT
   entityId   String
   changes    String                  // JSON string of changes
-  status     DiffNotificationStatus  @default(PENDING)
+  status     String                  @default("PENDING") // PENDING, IGNORED, ACCEPTED
   createdAt  DateTime                @default(now())
   
   // Foreign Keys
@@ -216,48 +216,11 @@ model DiffNotification {
   @@map("diff_notifications")
 }
 
-// Enums
-enum UserRole {
-  ADMIN
-  MANAGER
-  USER
-}
-
-enum ProjectStatus {
-  IDEA
-  PLANNING
-  APPROVAL
-  SETUP
-  LIVE
-  TEARDOWN
-  CLOSED
-}
-
-enum ProjectMemberRole {
-  OWNER
-  MANAGER
-  MEMBER
-}
-
-enum MaterialPhase {
-  SETUP
-  SHOW
-  TEARDOWN
-}
-
-enum EntityType {
-  MATERIAL
-  SUPPLIER
-  PROJECT
-}
-
-enum CommentScope {
-  GLOBAL
-  PROJECT
-}
-
-enum DiffNotificationStatus {
-  PENDING
-  IGNORED
-  ACCEPTED
-}
+// Enums are represented as String constants:
+// UserRole: "ADMIN" | "MANAGER" | "USER"
+// ProjectStatus: "IDEA" | "PLANNING" | "APPROVAL" | "SETUP" | "LIVE" | "TEARDOWN" | "CLOSED"
+// ProjectMemberRole: "OWNER" | "MANAGER" | "MEMBER"
+// MaterialPhase: "SETUP" | "SHOW" | "TEARDOWN"
+// EntityType: "MATERIAL" | "SUPPLIER" | "PROJECT"
+// CommentScope: "GLOBAL" | "PROJECT"
+// DiffNotificationStatus: "PENDING" | "IGNORED" | "ACCEPTED"

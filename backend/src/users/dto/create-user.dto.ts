@@ -1,6 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
-import { UserRole } from '@prisma/client';
+import { IsEmail, IsString, MinLength, IsIn, IsOptional } from 'class-validator';
+
+// Define enum constants
+export const UserRole = {
+  ADMIN: 'ADMIN',
+  MANAGER: 'MANAGER',
+  USER: 'USER',
+} as const;
+
+export type UserRoleType = typeof UserRole[keyof typeof UserRole];
 
 export class CreateUserDto {
   @ApiProperty({
@@ -28,12 +36,12 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
-    enum: UserRole,
+    enum: Object.values(UserRole),
     example: UserRole.USER,
     description: 'User role',
     required: false,
   })
   @IsOptional()
-  @IsEnum(UserRole)
-  role?: UserRole = UserRole.USER;
+  @IsIn(Object.values(UserRole))
+  role?: UserRoleType = UserRole.USER;
 }
