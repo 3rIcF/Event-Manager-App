@@ -1,0 +1,324 @@
+# Architektur-Regeln & Module
+
+## 🏗️ **Backend-Architektur (NestJS)**
+
+### **Modulstruktur**
+```
+src/
+├── auth/               # Supabase Auth Integration
+├── users/              # Benutzerverwaltung
+├── projects/           # Projektmanagement
+├── bom/                # BOM-Management
+├── suppliers/          # Lieferantenverwaltung
+├── tasks/              # Aufgabenverwaltung
+├── slots/              # Logistik-Planung
+├── permits/            # Genehmigungsprozesse
+├── files/              # Dateiverwaltung
+├── health/             # Health Checks
+└── common/             # Gemeinsame Services
+```
+
+### **Service-Layer-Pattern**
+```typescript
+@Injectable()
+export class EntityService {
+  constructor(
+    private prisma: PrismaService,
+    private cacheService: CacheService,
+    private auditService: AuditService,
+    private supabaseService: SupabaseService
+  ) {}
+}
+```
+
+### **Controller-Pattern**
+```typescript
+@Controller('entity')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('entity')
+export class EntityController {
+  @Post()
+  @Roles(UserRole.ORGANIZER, UserRole.ADMIN)
+  async create(@Body() dto: CreateEntityDto) {}
+}
+```
+
+## 🗄️ **Datenbank-Architektur (Prisma + Supabase)**
+
+### **Schema-Pattern**
+```prisma
+model Entity {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@map("entities")
+  @@index([userId])
+}
+```
+
+### **RLS-Policies (Supabase)**
+```sql
+-- RLS aktivieren
+ALTER TABLE entities ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Benutzer können nur eigene Daten sehen
+CREATE POLICY "Users can view own entities" ON entities
+  FOR SELECT USING (auth.uid()::text = userId);
+```
+
+## 🔐 **Authentifizierung & Autorisierung**
+
+### **Guard-Pattern**
+```typescript
+@Injectable()
+export class RolesGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    
+    if (!requiredRoles) return true;
+    
+    const { user } = context.switchToHttp().getRequest();
+    return requiredRoles.some(role => user.role === role);
+  }
+}
+```
+
+### **Rollen-Hierarchie**
+- **ADMIN**: Alle Operationen
+- **ORGANIZER**: Projekt-Management, BOM, Lieferanten
+- **ONSITE**: Projekt-Details, Aufgaben, Genehmigungen
+- **EXTERNAL_VENDOR**: Nur Lesen, eigene Daten
+
+## 📱 **Frontend-Architektur**
+
+### **React Native Structure**
+```
+src/
+├── components/          # Wiederverwendbare UI-Komponenten
+├── screens/            # App-Bildschirme
+├── navigation/         # Navigation und Routing
+├── services/           # API-Services und Business Logic
+├── store/              # Zustand State Management
+├── utils/              # Hilfsfunktionen
+└── types/              # TypeScript-Definitionen
+```
+
+### **Component-Pattern**
+```typescript
+interface ComponentProps {
+  data: EntityData;
+  onAction: (action: ActionType) => void;
+  isLoading?: boolean;
+}
+
+export const Component: React.FC<ComponentProps> = ({
+  data,
+  onAction,
+  isLoading = false
+}) => {
+  // Implementation
+};
+```
+
+## 🔄 **API-Design-Patterns**
+
+### **Response-Struktur**
+```typescript
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message: string;
+  errors?: string[];
+  warnings?: string[];
+  metadata?: {
+    timestamp: Date;
+    version: string;
+    pagination?: PaginationInfo;
+  };
+}
+```
+
+### **Error-Handling**
+```typescript
+@Controller('entity')
+export class EntityController {
+  @Post()
+  async create(@Body() dto: CreateEntityDto) {
+    try {
+      const result = await this.service.create(dto);
+      return {
+        success: true,
+        data: result,
+        message: 'Entity erfolgreich erstellt'
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Entity konnte nicht erstellt werden');
+    }
+  }
+}
+```
+
+## 🧪 **Testing-Architektur**
+
+### **Test-Struktur**
+```
+src/
+├── __tests__/          # Test-Dateien
+├── __mocks__/          # Mock-Dateien
+├── test-utils/         # Test-Hilfsfunktionen
+└── fixtures/           # Test-Daten
+```
+
+### **Test-Pattern**
+```typescript
+describe('EntityService', () => {
+  let service: EntityService;
+  let prisma: PrismaService;
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        EntityService,
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+      ],
+    }).compile();
+
+    service = module.get<EntityService>(EntityService);
+    prisma = module.get<PrismaService>(PrismaService);
+  });
+
+  it('should create entity', async () => {
+    const dto = { name: 'Test Entity' };
+    const expected = { id: '1', ...dto };
+    
+    jest.spyOn(prisma.entity, 'create').mockResolvedValue(expected);
+    
+    const result = await service.create(dto);
+    expect(result).toEqual(expected);
+  });
+});
+```
+
+## 📊 **Performance-Architektur**
+
+### **Caching-Strategien**
+```typescript
+@Injectable()
+export class CacheService {
+  async get<T>(key: string): Promise<T | null> {
+    const cached = await this.redis.get(key);
+    return cached ? JSON.parse(cached) : null;
+  }
+
+  async set(key: string, value: any, ttl: number = 3600): Promise<void> {
+    await this.redis.setex(key, ttl, JSON.stringify(value));
+  }
+}
+```
+
+### **Database-Optimization**
+```typescript
+// Mit Includes für effiziente Abfragen
+const entities = await this.prisma.entity.findMany({
+  where: { userId },
+  include: {
+    user: true,
+    category: true,
+  },
+  orderBy: { createdAt: 'desc' },
+  take: 20,
+});
+```
+
+## 🔍 **Monitoring & Observability**
+
+### **Health-Check-Pattern**
+```typescript
+@Controller('health')
+export class HealthController {
+  @Get()
+  @HealthCheck()
+  check() {
+    return this.health.check([
+      () => this.supabaseHealthIndicator.isHealthy('supabase'),
+      () => this.redisHealthIndicator.isHealthy('redis'),
+      () => this.minioHealthIndicator.isHealthy('minio'),
+    ]);
+  }
+}
+```
+
+### **Logging-Pattern**
+```typescript
+@Injectable()
+export class EntityService {
+  private readonly logger = new Logger(EntityService.name);
+
+  async create(dto: CreateEntityDto) {
+    this.logger.log(`Creating entity: ${dto.name}`);
+    
+    try {
+      const result = await this.prisma.entity.create({ data: dto });
+      this.logger.log(`Entity created successfully: ${result.id}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Failed to create entity: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+}
+```
+
+## 🚀 **Deployment-Architektur**
+
+### **Environment-Configuration**
+```typescript
+// config/configuration.ts
+export default () => ({
+  port: parseInt(process.env.PORT, 10) || 3000,
+  database: {
+    url: process.env.DATABASE_URL,
+  },
+  supabase: {
+    url: process.env.SUPABASE_URL,
+    key: process.env.SUPABASE_ANON_KEY,
+    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  },
+  redis: {
+    url: process.env.REDIS_URL,
+  },
+});
+```
+
+### **Docker-Pattern**
+```dockerfile
+# Dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+FROM node:20-alpine AS runtime
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY dist ./dist
+EXPOSE 3000
+CMD ["node", "dist/main"]
+```
+description:
+globs:
+alwaysApply: false
+---

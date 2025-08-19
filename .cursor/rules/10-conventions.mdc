@@ -1,0 +1,509 @@
+# Code-Style & Konventionen
+
+## 🎨 **TypeScript-Konventionen**
+
+### **Strict Mode**
+```typescript
+// tsconfig.json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  }
+}
+```
+
+### **Interface-Namenskonventionen**
+```typescript
+// DTOs
+interface CreateUserDto {
+  email: string;
+  name: string;
+  role: UserRole;
+}
+
+interface UpdateUserDto extends Partial<CreateUserDto> {}
+
+// Responses
+interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  createdAt: Date;
+}
+
+// API Responses
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message: string;
+  errors?: string[];
+}
+```
+
+### **Type-Definitionen**
+```typescript
+// Enums
+enum UserRole {
+  ADMIN = 'ADMIN',
+  ORGANIZER = 'ORGANIZER',
+  ONSITE = 'ONSITE',
+  EXTERNAL_VENDOR = 'EXTERNAL_VENDOR'
+}
+
+// Union Types
+type ProjectStatus = 'PLANNING' | 'APPROVED' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+
+// Generic Types
+type PaginatedResponse<T> = {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+};
+```
+
+## 🏗️ **NestJS-Konventionen**
+
+### **Decorator-Pattern**
+```typescript
+@Controller('users')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('users')
+@ApiBearerAuth()
+export class UsersController {
+  @Post()
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Benutzer erstellen' })
+  @ApiResponse({ status: 201, description: 'Benutzer erfolgreich erstellt' })
+  @ApiResponse({ status: 400, description: 'Ungültige Eingabedaten' })
+  async create(@Body() createUserDto: CreateUserDto): Promise<UserResponse> {}
+}
+```
+
+### **Service-Pattern**
+```typescript
+@Injectable()
+export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cacheService: CacheService,
+    private readonly auditService: AuditService
+  ) {}
+
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    this.logger.log(`Creating user: ${createUserDto.email}`);
+    
+    try {
+      const user = await this.prisma.user.create({
+        data: createUserDto,
+      });
+      
+      await this.auditService.log('USER_CREATED', { userId: user.id });
+      await this.cacheService.invalidate('users');
+      
+      this.logger.log(`User created successfully: ${user.id}`);
+      return user;
+    } catch (error) {
+      this.logger.error(`Failed to create user: ${error.message}`, error.stack);
+      throw new BadRequestException('Benutzer konnte nicht erstellt werden');
+    }
+  }
+}
+```
+
+### **Module-Struktur**
+```typescript
+@Module({
+  imports: [
+    PrismaModule,
+    CacheModule,
+    AuditModule,
+    // Weitere Module
+  ],
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+```
+
+## 🗄️ **Prisma-Konventionen**
+
+### **Schema-Pattern**
+```prisma
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  role         UserRole
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  projects     Project[] @relation("ProjectOwner")
+  tasks        Task[]    @relation("TaskAssignee")
+
+  // Indizes
+  @@map("users")
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+}
+```
+
+### **Query-Patterns**
+```typescript
+// Mit Includes für effiziente Abfragen
+const user = await this.prisma.user.findUnique({
+  where: { id: userId },
+  include: {
+    projects: {
+      include: {
+        tasks: true,
+      },
+    },
+    tasks: {
+      where: { status: 'IN_PROGRESS' },
+    },
+  },
+});
+
+// Pagination
+const users = await this.prisma.user.findMany({
+  where: { isActive: true },
+  skip: (page - 1) * limit,
+  take: limit,
+  orderBy: { createdAt: 'desc' },
+  include: { projects: true },
+});
+
+// Aggregation
+const userStats = await this.prisma.user.aggregate({
+  where: { isActive: true },
+  _count: { id: true },
+  _avg: { projects: { _count: true } },
+});
+```
+
+## 📱 **React Native-Konventionen**
+
+### **Component-Struktur**
+```typescript
+interface UserCardProps {
+  user: User;
+  onEdit: (userId: string) => void;
+  onDelete: (userId: string) => void;
+  isLoading?: boolean;
+}
+
+export const UserCard: React.FC<UserCardProps> = ({
+  user,
+  onEdit,
+  onDelete,
+  isLoading = false
+}) => {
+  const handleEdit = useCallback(() => {
+    onEdit(user.id);
+  }, [user.id, onEdit]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(user.id);
+  }, [user.id, onDelete]);
+
+  if (isLoading) {
+    return <UserCardSkeleton />;
+  }
+
+  return (
+    <Card className="p-4">
+      <View className="flex-row items-center justify-between">
+        <View className="flex-1">
+          <Text className="text-lg font-semibold">{user.name}</Text>
+          <Text className="text-sm text-gray-600">{user.email}</Text>
+          <Badge variant={getRoleVariant(user.role)}>
+            {user.role}
+          </Badge>
+        </View>
+        <View className="flex-row gap-2">
+          <Button size="sm" variant="outline" onPress={handleEdit}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="destructive" onPress={handleDelete}>
+            <Trash className="h-4 w-4" />
+          </Button>
+        </View>
+      </View>
+    </Card>
+  );
+};
+```
+
+### **Hook-Patterns**
+```typescript
+// Custom Hook für API-Calls
+export const useUsers = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await api.get('/users');
+      setUsers(response.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const createUser = useCallback(async (userData: CreateUserDto) => {
+    try {
+      const response = await api.post('/users', userData);
+      setUsers(prev => [...prev, response.data]);
+      return response.data;
+    } catch (err) {
+      throw new Error(err.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  return {
+    users,
+    isLoading,
+    error,
+    fetchUsers,
+    createUser,
+  };
+};
+```
+
+## 🧪 **Testing-Konventionen**
+
+### **Test-Struktur**
+```typescript
+describe('UsersService', () => {
+  let service: UsersService;
+  let prisma: PrismaService;
+  let cache: CacheService;
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+        {
+          provide: CacheService,
+          useValue: mockCacheService,
+        },
+      ],
+    }).compile();
+
+    service = module.get<UsersService>(UsersService);
+    prisma = module.get<PrismaService>(PrismaService);
+    cache = module.get<CacheService>(CacheService);
+  });
+
+  describe('create', () => {
+    it('should create user successfully', async () => {
+      const dto = { email: 'test@example.com', name: 'Test User', role: UserRole.ORGANIZER };
+      const expected = { id: '1', ...dto, isActive: true, createdAt: new Date(), updatedAt: new Date() };
+      
+      jest.spyOn(prisma.user, 'create').mockResolvedValue(expected);
+      jest.spyOn(cache, 'invalidate').mockResolvedValue(undefined);
+      
+      const result = await service.create(dto);
+      
+      expect(result).toEqual(expected);
+      expect(prisma.user.create).toHaveBeenCalledWith({ data: dto });
+      expect(cache.invalidate).toHaveBeenCalledWith('users');
+    });
+
+    it('should throw error if email already exists', async () => {
+      const dto = { email: 'existing@example.com', name: 'Test User', role: UserRole.ORGANIZER };
+      
+      jest.spyOn(prisma.user, 'create').mockRejectedValue(new Error('Unique constraint failed'));
+      
+      await expect(service.create(dto)).rejects.toThrow('Benutzer konnte nicht erstellt werden');
+    });
+  });
+});
+```
+
+### **Mock-Patterns**
+```typescript
+// __mocks__/prisma.service.ts
+export const mockPrismaService = {
+  user: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
+  project: {
+    create: jest.fn(),
+    findMany: jest.fn(),
+  },
+  $transaction: jest.fn(),
+};
+
+// __mocks__/cache.service.ts
+export const mockCacheService = {
+  get: jest.fn(),
+  set: jest.fn(),
+  invalidate: jest.fn(),
+  clear: jest.fn(),
+};
+```
+
+## 📝 **Dokumentations-Konventionen**
+
+### **JSDoc-Patterns**
+```typescript
+/**
+ * Erstellt einen neuen Benutzer im System
+ * @param createUserDto - DTO mit Benutzerdaten
+ * @returns Promise<User> - Erstellter Benutzer
+ * @throws BadRequestException - Bei ungültigen Eingabedaten
+ * @throws ConflictException - Bei doppelter E-Mail
+ */
+async create(createUserDto: CreateUserDto): Promise<User> {
+  // Implementation
+}
+
+/**
+ * Benutzer-Interface für API-Responses
+ * @interface UserResponse
+ * @property {string} id - Eindeutige Benutzer-ID
+ * @property {string} email - E-Mail-Adresse
+ * @property {string} name - Vollständiger Name
+ * @property {UserRole} role - Benutzerrolle
+ * @property {Date} createdAt - Erstellungsdatum
+ */
+interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  createdAt: Date;
+}
+```
+
+### **API-Dokumentation**
+```typescript
+@Post()
+@ApiOperation({ 
+  summary: 'Benutzer erstellen',
+  description: 'Erstellt einen neuen Benutzer mit den angegebenen Daten'
+})
+@ApiBody({
+  type: CreateUserDto,
+  description: 'Benutzerdaten für die Erstellung'
+})
+@ApiResponse({ 
+  status: 201, 
+  description: 'Benutzer erfolgreich erstellt',
+  type: UserResponse
+})
+@ApiResponse({ 
+  status: 400, 
+  description: 'Ungültige Eingabedaten',
+  schema: {
+    type: 'object',
+    properties: {
+      message: { type: 'string' },
+      errors: { type: 'array', items: { type: 'string' } }
+    }
+  }
+})
+@ApiResponse({ 
+  status: 409, 
+  description: 'E-Mail-Adresse bereits vergeben' 
+})
+async create(@Body() createUserDto: CreateUserDto): Promise<UserResponse> {}
+```
+
+## 🚫 **Verbotene Praktiken**
+
+### **TypeScript**
+```typescript
+// ❌ NICHT erlaubt
+const data: any = response.data;
+const user = data.user as any;
+
+// ✅ Erlaubt
+const data: ApiResponse<User> = response.data;
+const user: User = data.user;
+```
+
+### **Error-Handling**
+```typescript
+// ❌ NICHT erlaubt
+catch (error) {
+  console.log(error);
+}
+
+// ✅ Erlaubt
+catch (error) {
+  this.logger.error(`Operation failed: ${error.message}`, error.stack);
+  throw new BadRequestException('Operation konnte nicht ausgeführt werden');
+}
+```
+
+### **Database-Queries**
+```typescript
+// ❌ NICHT erlaubt
+const users = await prisma.$queryRaw`SELECT * FROM users WHERE role = ${role}`;
+
+// ✅ Erlaubt
+const users = await prisma.user.findMany({
+  where: { role },
+  include: { projects: true }
+});
+```
+
+## ✅ **Erforderliche Praktiken**
+
+### **Type Safety**
+- Alle Funktionen müssen vollständig typisiert sein
+- Keine `any`-Typen verwenden
+- Union Types für enums verwenden
+- Generic Types für wiederverwendbare Komponenten
+
+### **Error Handling**
+- Strukturiertes Logging für alle Fehler
+- Spezifische Exception-Typen verwenden
+- User-freundliche Fehlermeldungen
+- Audit-Logging für kritische Operationen
+
+### **Performance**
+- Database-Queries mit Includes optimieren
+- Caching für häufige Abfragen
+- Pagination für große Datensätze
+- Lazy Loading für UI-Komponenten
+description:
+globs:
+alwaysApply: false
+---

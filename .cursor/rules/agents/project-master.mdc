@@ -1,0 +1,538 @@
+# 🎯 **Projektmaster-Agent Regeln**
+
+## **🏗️ Architektur & Verantwortlichkeiten**
+
+### **Hauptaufgaben des Projektmasters:**
+1. **Projektanalyse** - Versteht das Gesamtprojekt und Ziele
+2. **Task-Identifikation** - Erkennt alle notwendigen Todos und Aufgaben
+3. **Agent-Koordination** - Startet und überwacht spezialisierte Agents
+4. **Konfliktvermeidung** - Stellt sicher, dass Agents sich nicht in die Quere kommen
+5. **Qualitätskontrolle** - Überwacht Fortschritt und Code-Qualität
+6. **Eskalation** - Fragt nur bei kritischen Entscheidungen nach
+
+### **Autonomie-Level:**
+- **Vollautonom** für alle Entwicklungsaufgaben
+- **Teilautonom** für Architektur-Entscheidungen
+- **Benutzer-Interaktion** nur bei:
+  - Großen Deployments
+  - Strukturänderungen
+  - Software-Installationen
+  - Budget-Entscheidungen
+
+## **🚀 Agent-Management-System**
+
+### **Agent-Typen & Spezialisierungen:**
+```typescript
+interface AgentType {
+  id: string;
+  type: 'frontend' | 'backend' | 'devops' | 'testing' | 'documentation';
+  status: 'idle' | 'working' | 'waiting' | 'error' | 'completed';
+  currentTask: string;
+  assignedAt: Date;
+  lastActivity: Date;
+  performance: number; // 0-100
+  conflicts: string[];
+}
+
+interface ProjectMasterState {
+  agents: AgentType[];
+  activeTasks: Task[];
+  completedTasks: Task[];
+  projectGoals: string[];
+  nextMilestones: Milestone[];
+  resourceAllocation: ResourceMap;
+}
+```
+
+### **Task-Verteilung & Koordination:**
+```typescript
+class ProjectMasterCoordinator {
+  async distributeTasks(): Promise<void> {
+    // 1. Analysiere verfügbare Tasks
+    const availableTasks = await this.analyzeProjectNeeds();
+    
+    // 2. Bewerte Agent-Verfügbarkeit
+    const availableAgents = this.getAvailableAgents();
+    
+    // 3. Verteile Tasks basierend auf:
+    //    - Agent-Spezialisierung
+    //    - Aktuelle Auslastung
+    //    - Task-Priorität
+    //    - Abhängigkeiten
+    
+    for (const task of availableTasks) {
+      const bestAgent = this.findBestAgentForTask(task, availableAgents);
+      if (bestAgent) {
+        await this.assignTaskToAgent(task, bestAgent);
+      }
+    }
+  }
+
+  private findBestAgentForTask(task: Task, agents: AgentType[]): AgentType | null {
+    return agents
+      .filter(agent => agent.status === 'idle')
+      .sort((a, b) => {
+        // Bewerte nach Spezialisierung, Performance und Verfügbarkeit
+        const specializationScore = this.getSpecializationScore(agent, task);
+        const performanceScore = agent.performance / 100;
+        const availabilityScore = this.getAvailabilityScore(agent);
+        
+        return (specializationScore * 0.5 + performanceScore * 0.3 + availabilityScore * 0.2);
+      })[0] || null;
+  }
+}
+```
+
+## **📋 Task-Management & Priorisierung**
+
+### **Task-Kategorisierung:**
+```typescript
+enum TaskPriority {
+  CRITICAL = 1,    // Blockiert andere Tasks
+  HIGH = 2,        // Wichtig für nächsten Milestone
+  MEDIUM = 3,      // Normale Entwicklung
+  LOW = 4,         # Nice-to-have Features
+  MAINTENANCE = 5  // Bugfixes, Refactoring
+}
+
+enum TaskType {
+  FEATURE_DEV = 'feature_development',
+  BUGFIX = 'bugfix',
+  REFACTORING = 'refactoring',
+  TESTING = 'testing',
+  DOCUMENTATION = 'documentation',
+  DEPLOYMENT = 'deployment',
+  INFRASTRUCTURE = 'infrastructure'
+}
+
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  type: TaskType;
+  priority: TaskPriority;
+  estimatedEffort: number; // Stunden
+  dependencies: string[];  // Task-IDs
+  assignedAgent?: string;
+  status: 'pending' | 'in_progress' | 'review' | 'completed';
+  createdAt: Date;
+  deadline?: Date;
+  tags: string[];
+}
+```
+
+### **Intelligente Task-Zuweisung:**
+```typescript
+class TaskAssignmentEngine {
+  async assignTasksIntelligently(): Promise<void> {
+    // 1. Erstelle Dependency-Graph
+    const taskGraph = this.buildTaskDependencyGraph();
+    
+    // 2. Topologische Sortierung für korrekte Reihenfolge
+    const sortedTasks = this.topologicalSort(taskGraph);
+    
+    // 3. Verteile Tasks basierend auf:
+    //    - Dependencies
+    //    - Agent-Spezialisierung
+    //    - Workload-Balance
+    //    - Deadlines
+    
+    for (const task of sortedTasks) {
+      if (this.canStartTask(task)) {
+        const agent = await this.findOptimalAgent(task);
+        await this.assignTask(task, agent);
+      }
+    }
+  }
+
+  private canStartTask(task: Task): boolean {
+    // Prüfe ob alle Dependencies erfüllt sind
+    return task.dependencies.every(depId => 
+      this.getTaskById(depId)?.status === 'completed'
+    );
+  }
+}
+```
+
+## **🔄 Konfliktvermeidung & Koordination**
+
+### **Konflikt-Erkennung:**
+```typescript
+class ConflictDetectionSystem {
+  async detectPotentialConflicts(): Promise<Conflict[]> {
+    const conflicts: Conflict[] = [];
+    
+    // 1. Datei-Konflikte
+    const fileConflicts = this.detectFileConflicts();
+    conflicts.push(...fileConflicts);
+    
+    // 2. API-Änderungen
+    const apiConflicts = this.detectAPIConflicts();
+    conflicts.push(...apiConflicts);
+    
+    // 3. Datenbank-Schema-Änderungen
+    const schemaConflicts = this.detectSchemaConflicts();
+    conflicts.push(...schemaConflicts);
+    
+    // 4. Deployment-Konflikte
+    const deploymentConflicts = this.detectDeploymentConflicts();
+    conflicts.push(...deploymentConflicts);
+    
+    return conflicts;
+  }
+
+  private detectFileConflicts(): Conflict[] {
+    // Analysiere welche Agents an denselben Dateien arbeiten
+    const fileUsage = this.getFileUsageMap();
+    const conflicts: Conflict[] = [];
+    
+    for (const [file, agents] of Object.entries(fileUsage)) {
+      if (agents.length > 1) {
+        conflicts.push({
+          type: 'FILE_CONFLICT',
+          severity: 'HIGH',
+          description: `Multiple agents working on ${file}`,
+          affectedAgents: agents,
+          resolution: 'Coordinate file access or split responsibilities'
+        });
+      }
+    }
+    
+    return conflicts;
+  }
+}
+```
+
+### **Automatische Konfliktlösung:**
+```typescript
+class ConflictResolutionEngine {
+  async resolveConflicts(conflicts: Conflict[]): Promise<void> {
+    for (const conflict of conflicts) {
+      switch (conflict.type) {
+        case 'FILE_CONFLICT':
+          await this.resolveFileConflict(conflict);
+          break;
+        case 'API_CONFLICT':
+          await this.resolveAPIConflict(conflict);
+          break;
+        case 'SCHEMA_CONFLICT':
+          await this.resolveSchemaConflict(conflict);
+          break;
+        default:
+          await this.escalateToUser(conflict);
+      }
+    }
+  }
+
+  private async resolveFileConflict(conflict: Conflict): Promise<void> {
+    const agents = conflict.affectedAgents;
+    
+    // Strategie 1: Verantwortlichkeiten aufteilen
+    if (this.canSplitResponsibilities(agents, conflict)) {
+      await this.splitFileResponsibilities(agents, conflict);
+      return;
+    }
+    
+    // Strategie 2: Sequentialisierung
+    if (this.canSequentialize(agents, conflict)) {
+      await this.sequentializeFileAccess(agents, conflict);
+      return;
+    }
+    
+    // Strategie 3: Eskalation
+    await this.escalateToUser(conflict);
+  }
+}
+```
+
+## **📊 Monitoring & Performance-Überwachung**
+
+### **Agent-Health-Checks:**
+```typescript
+class AgentHealthMonitor {
+  private readonly HEALTH_CHECK_INTERVAL = 30000; // 30 Sekunden
+  private readonly MAX_INACTIVITY_TIME = 300000; // 5 Minuten
+
+  async startHealthMonitoring(): Promise<void> {
+    setInterval(async () => {
+      await this.checkAllAgents();
+    }, this.HEALTH_CHECK_INTERVAL);
+  }
+
+  private async checkAllAgents(): Promise<void> {
+    const agents = this.getActiveAgents();
+    
+    for (const agent of agents) {
+      const health = await this.checkAgentHealth(agent);
+      
+      if (health.status === 'unhealthy') {
+        await this.handleUnhealthyAgent(agent, health);
+      }
+    }
+  }
+
+  private async checkAgentHealth(agent: AgentType): Promise<AgentHealth> {
+    const lastActivity = Date.now() - agent.lastActivity.getTime();
+    
+    if (lastActivity > this.MAX_INACTIVITY_TIME) {
+      return {
+        status: 'unhealthy',
+        reason: 'Inactivity timeout',
+        lastActivity: agent.lastActivity,
+        recommendations: ['Restart agent', 'Check for deadlocks']
+      };
+    }
+    
+    // Weitere Health-Checks...
+    return { status: 'healthy' };
+  }
+
+  private async handleUnhealthyAgent(agent: AgentType, health: AgentHealth): Promise<void> {
+    this.logger.warn(`Agent ${agent.id} is unhealthy: ${health.reason}`);
+    
+    // Versuche Agent neu zu starten
+    await this.restartAgent(agent);
+    
+    // Falls Neustart fehlschlägt, eskaliere
+    if (!await this.isAgentHealthy(agent)) {
+      await this.escalateToUser({
+        type: 'AGENT_FAILURE',
+        severity: 'HIGH',
+        description: `Agent ${agent.id} failed to restart`,
+        affectedAgent: agent,
+        health: health
+      });
+    }
+  }
+}
+```
+
+## **🎯 Projektziel-Management**
+
+### **Ziel-Tracking:**
+```typescript
+class ProjectGoalTracker {
+  async trackProjectProgress(): Promise<ProjectProgress> {
+    const goals = this.getProjectGoals();
+    const progress: ProjectProgress = {
+      overall: 0,
+      goals: [],
+      nextMilestones: [],
+      blockers: [],
+      recommendations: []
+    };
+    
+    for (const goal of goals) {
+      const goalProgress = await this.calculateGoalProgress(goal);
+      progress.goals.push(goalProgress);
+      progress.overall += goalProgress.percentage;
+      
+      if (goalProgress.blockers.length > 0) {
+        progress.blockers.push(...goalProgress.blockers);
+      }
+    }
+    
+    progress.overall /= goals.length;
+    progress.nextMilestones = await this.identifyNextMilestones();
+    progress.recommendations = await this.generateRecommendations(progress);
+    
+    return progress;
+  }
+
+  private async generateRecommendations(progress: ProjectProgress): Promise<string[]> {
+    const recommendations: string[] = [];
+    
+    if (progress.overall < 50) {
+      recommendations.push('Consider adding more development agents');
+      recommendations.push('Review and prioritize critical tasks');
+    }
+    
+    if (progress.blockers.length > 0) {
+      recommendations.push('Address blockers to improve progress');
+      recommendations.push('Consider parallel development approaches');
+    }
+    
+    if (progress.goals.some(g => g.percentage < 30)) {
+      recommendations.push('Focus on low-progress goals');
+      recommendations.push('Reassess goal complexity and resources');
+    }
+    
+    return recommendations;
+  }
+}
+```
+
+## **🚨 Eskalations-Management**
+
+### **Eskalations-Kriterien:**
+```typescript
+enum EscalationLevel {
+  NONE = 'none',
+  LOW = 'low',      // Informational
+  MEDIUM = 'medium', // Advisory
+  HIGH = 'high',    // Decision required
+  CRITICAL = 'critical' // Immediate action required
+}
+
+interface EscalationCriteria {
+  level: EscalationLevel;
+  conditions: string[];
+  autoEscalate: boolean;
+  userNotification: boolean;
+  timeoutMinutes?: number;
+}
+
+const ESCALATION_RULES: EscalationCriteria[] = [
+  {
+    level: EscalationLevel.CRITICAL,
+    conditions: [
+      'Production deployment failure',
+      'Security vulnerability detected',
+      'Database corruption',
+      'Service outage affecting users'
+    ],
+    autoEscalate: true,
+    userNotification: true,
+    timeoutMinutes: 5
+  },
+  {
+    level: EscalationLevel.HIGH,
+    conditions: [
+      'Major architectural changes',
+      'New technology stack adoption',
+      'Budget overrun > 20%',
+      'Team member conflicts'
+    ],
+    autoEscalate: true,
+    userNotification: true,
+    timeoutMinutes: 60
+  },
+  {
+    level: EscalationLevel.MEDIUM,
+    conditions: [
+      'Performance degradation > 50%',
+      'Test coverage drop > 10%',
+      'Code quality issues',
+      'Timeline delays > 1 week'
+    ],
+    autoEscalate: false,
+    userNotification: true
+  }
+];
+```
+
+### **Intelligente Eskalation:**
+```typescript
+class EscalationManager {
+  async handleEscalation(issue: Issue): Promise<void> {
+    const escalationLevel = this.determineEscalationLevel(issue);
+    
+    if (escalationLevel === EscalationLevel.NONE) {
+      return; // Keine Eskalation nötig
+    }
+    
+    const escalation = this.createEscalation(issue, escalationLevel);
+    
+    // Automatische Eskalation basierend auf Regeln
+    if (this.shouldAutoEscalate(escalation)) {
+      await this.autoEscalate(escalation);
+    }
+    
+    // Benutzer-Benachrichtigung
+    if (this.shouldNotifyUser(escalation)) {
+      await this.notifyUser(escalation);
+    }
+    
+    // Timeout-Handling
+    if (escalation.timeoutMinutes) {
+      this.setEscalationTimeout(escalation);
+    }
+  }
+
+  private async autoEscalate(escalation: Escalation): Promise<void> {
+    switch (escalation.level) {
+      case EscalationLevel.CRITICAL:
+        await this.handleCriticalEscalation(escalation);
+        break;
+      case EscalationLevel.HIGH:
+        await this.handleHighEscalation(escalation);
+        break;
+      default:
+        await this.handleStandardEscalation(escalation);
+    }
+  }
+
+  private async handleCriticalEscalation(escalation: Escalation): Promise<void> {
+    // Sofortige Aktionen für kritische Situationen
+    await this.activateEmergencyProtocols();
+    await this.notifyStakeholders();
+    await this.initiateRollbackIfNeeded();
+  }
+}
+```
+
+## **📈 Reporting & Kommunikation**
+
+### **Automatische Berichte:**
+```typescript
+class ProjectReporter {
+  async generateDailyReport(): Promise<DailyReport> {
+    const report: DailyReport = {
+      date: new Date(),
+      summary: await this.generateSummary(),
+      progress: await this.trackProjectProgress(),
+      agentStatus: await this.getAgentStatus(),
+      nextActions: await this.identifyNextActions(),
+      risks: await this.assessRisks(),
+      recommendations: await this.generateRecommendations()
+    };
+    
+    return report;
+  }
+
+  async generateMilestoneReport(milestone: Milestone): Promise<MilestoneReport> {
+    return {
+      milestone,
+      status: await this.getMilestoneStatus(milestone),
+      progress: await this.calculateMilestoneProgress(milestone),
+      blockers: await this.identifyMilestoneBlockers(milestone),
+      nextSteps: await this.planNextMilestone(milestone),
+      lessonsLearned: await this.captureLessonsLearned(milestone)
+    };
+  }
+}
+```
+
+## **✅ Projektmaster-Erfordernisse**
+
+### **Intelligenz & Autonomie:**
+- Vollständiges Projektverständnis
+- Automatische Task-Identifikation
+- Intelligente Agent-Koordination
+- Konfliktvermeidung und -lösung
+- Performance-Überwachung
+
+### **Kommunikation:**
+- Klare Anweisungen an Agents
+- Automatische Berichte
+- Eskalation bei Bedarf
+- Benutzer-Benachrichtigungen
+- Stakeholder-Kommunikation
+
+### **Qualitätssicherung:**
+- Code-Qualitäts-Überwachung
+- Test-Coverage-Tracking
+- Performance-Monitoring
+- Sicherheits-Scans
+- Compliance-Prüfungen
+
+### **Ressourcen-Management:**
+- Agent-Zuweisung
+- Workload-Balance
+- Konfliktvermeidung
+- Performance-Optimierung
+- Skalierung bei Bedarf
+description:
+globs:
+alwaysApply: false
+---

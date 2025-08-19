@@ -1,0 +1,79 @@
+# Event Manager Application - Projektübersicht
+
+## 🎯 **Projektzweck**
+Professionelle Event-Management-Anwendung für die Organisation von Großveranstaltungen mit umfassender Projektverwaltung, BOM-Management und Lieferantenkoordination.
+
+## 🏗️ **Systemdomäne**
+- **Event-Planung**: Projektmanagement für Großveranstaltungen
+- **BOM-Management**: Bill of Materials mit hierarchischer Struktur
+- **Lieferantenkoordination**: Verfügbarkeitsplanung und Bewertungssystem
+- **Aufgabenverwaltung**: Task-Management mit Workflows
+- **Genehmigungsprozesse**: Permit-Management für behördliche Genehmigungen
+
+## 🌐 **Systemgrenzen**
+- **Frontend**: React Native Mobile App + Progressive Web App (PWA)
+- **Backend**: NestJS API Gateway mit Prisma ORM
+- **Datenbank**: Supabase PostgreSQL mit Row Level Security
+- **Infrastruktur**: Supabase Cloud + Docker für lokale Entwicklung
+- **Mobile**: iOS/Android mit Offline-Funktionalität
+
+## 🚀 **Technologie-Stack**
+- **Frontend**: React Native, Expo, TypeScript, NativeWind
+- **Backend**: NestJS, Prisma, Supabase, Redis, MinIO
+- **Infrastruktur**: Supabase Cloud, Docker, GitHub Actions
+- **Monitoring**: Health Checks, Logging, Performance Tracking
+
+## 📁 **Projektstruktur**
+```
+Event-Manager-App/
+├── apps/
+│   ├── api/          # NestJS Backend
+│   ├── mobile-web/   # React Native App
+│   └── web/          # Progressive Web App
+├── packages/
+│   ├── config/       # Shared Configuration
+│   ├── types/        # Shared TypeScript Types
+│   └── ui/           # Shared UI Components
+├── docs/             # Projekt-Dokumentation
+├── infra/            # Docker & Infrastructure
+└── scripts/          # Build & Deployment Scripts
+```
+
+## 🎭 **AI-Agent-Rollen**
+- **Supervisor**: Aufgabenzerlegung, Checklisten, Review-Forderungen
+- **Implementer**: Code + Tests nach Konventionen
+- **Reviewer**: Diff-Prüfung (Security/Performance/API-Kompatibilität)
+- **Tester**: Automatisierte Tests und Qualitätssicherung
+- **Documenter**: Dokumentation und API-Spezifikationen
+
+## 🔒 **Sicherheitsrichtlinien**
+- **Row Level Security (RLS)** auf Datenbankebene
+- **JWT-basierte Authentifizierung** mit Supabase
+- **Rollenbasierte Zugriffskontrolle (RBAC)**
+- **Audit-Logging** für alle Datenbankoperationen
+- **GDPR-konforme** Datenverarbeitung
+
+## 📊 **Qualitätsstandards**
+- **API-Response-Zeit**: < 200ms
+- **Systemverfügbarkeit**: > 99.9%
+- **Code-Coverage**: > 80%
+- **TypeScript**: Strict Mode aktiviert
+- **ESLint + Prettier**: Konsistenter Code-Style
+
+## 🚫 **Verbotene Praktiken**
+- Keine `any`-Typen in TypeScript
+- Keine Hardcoded-Secrets im Code
+- Keine direkten Datenbankzugriffe ohne Prisma
+- Keine unvalidierten User-Inputs
+- Keine ungetesteten API-Endpunkte
+
+## ✅ **Erforderliche Praktiken**
+- Vollständige TypeScript-Typisierung
+- Unit-Tests für alle Services
+- Integration-Tests für API-Endpunkte
+- Dokumentation aller öffentlichen APIs
+- Error-Handling mit strukturiertem Logging
+description:
+globs:
+alwaysApply: false
+---

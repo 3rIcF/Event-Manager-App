@@ -1,0 +1,464 @@
+# Backend-spezifische Regeln
+
+## 🏗️ **Architektur & Design Patterns**
+
+### **API-Design**
+```typescript
+// ✅ RESTful API Structure
+@Controller('users')
+export class UserController {
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async findAll(@Query() query: UserQueryDto): Promise<PaginatedResponse<User>> {
+    return this.userService.findAll(query);
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.userService.create(createUserDto);
+  }
+}
+```
+
+### **Service Layer Pattern**
+```typescript
+// ✅ Service Implementation
+@Injectable()
+export class UserService {
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly logger: Logger
+  ) {}
+
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    try {
+      // Validate business rules
+      await this.validateBusinessRules(createUserDto);
+      
+      // Create user
+      const user = await this.userRepository.create(createUserDto);
+      
+      // Emit events
+      this.eventEmitter.emit('user.created', { userId: user.id });
+      
+      // Log success
+      this.logger.log(`User created: ${user.id}`);
+      
+      return user;
+    } catch (error) {
+      this.logger.error(`Failed to create user: ${error.message}`);
+      throw new UserCreationException(error.message);
+    }
+  }
+}
+```
+
+## 🗄️ **Datenbank & ORM**
+
+### **Prisma Schema Design**
+```prisma
+// ✅ Optimized Prisma Schema
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  role        UserRole @default(USER)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  profile     Profile?
+  events      Event[]
+  bookings    Booking[]
+
+  // Indexes for performance
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@index([createdAt])
+}
+```
+
+### **Repository Pattern**
+```typescript
+// ✅ Repository Implementation
+export class UserRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findById(id: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        profile: true,
+        events: {
+          where: { isActive: true },
+          orderBy: { startDate: 'desc' },
+          take: 10
+        }
+      }
+    });
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        role: true,
+        isActive: true
+      }
+    });
+  }
+}
+```
+
+## 🔐 **Sicherheit & Authentifizierung**
+
+### **JWT Authentication**
+```typescript
+// ✅ JWT Strategy
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly userService: UserService
+  ) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: configService.get<string>('JWT_SECRET'),
+    });
+  }
+
+  async validate(payload: JwtPayload): Promise<User> {
+    const user = await this.userService.findById(payload.sub);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('User not found or inactive');
+    }
+    return user;
+  }
+}
+```
+
+### **Role-Based Access Control**
+```typescript
+// ✅ RBAC Guard
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (!requiredRoles) {
+      return true;
+    }
+
+    const { user } = context.switchToHttp().getRequest();
+    return requiredRoles.some((role) => user.role === role);
+  }
+}
+```
+
+## 📊 **Performance & Caching**
+
+### **Redis Caching**
+```typescript
+// ✅ Cache Service
+@Injectable()
+export class CacheService {
+  constructor(
+    private readonly redis: Redis,
+    private readonly logger: Logger
+  ) {}
+
+  async get<T>(key: string): Promise<T | null> {
+    try {
+      const value = await this.redis.get(key);
+      return value ? JSON.parse(value) : null;
+    } catch (error) {
+      this.logger.error(`Cache get error: ${error.message}`);
+      return null;
+    }
+  }
+
+  async set(key: string, value: any, ttl?: number): Promise<void> {
+    try {
+      const serialized = JSON.stringify(value);
+      if (ttl) {
+        await this.redis.setex(key, ttl, serialized);
+      } else {
+        await this.redis.set(key, serialized);
+      }
+    } catch (error) {
+      this.logger.error(`Cache set error: ${error.message}`);
+    }
+  }
+}
+```
+
+### **Database Query Optimization**
+```typescript
+// ✅ Optimized Queries
+export class OptimizedUserService {
+  async findUsersWithPagination(
+    page: number,
+    limit: number,
+    filters: UserFilters
+  ): Promise<PaginatedResponse<User>> {
+    const skip = (page - 1) * limit;
+    
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where: this.buildWhereClause(filters),
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          _count: {
+            select: {
+              events: true,
+              bookings: true
+            }
+          }
+        }
+      }),
+      this.prisma.user.count({
+        where: this.buildWhereClause(filters)
+      })
+    ]);
+
+    return {
+      data: users,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    };
+  }
+}
+```
+
+## 🧪 **Testing & Quality Assurance**
+
+### **Unit Testing**
+```typescript
+// ✅ Service Tests
+describe('UserService', () => {
+  let service: UserService;
+  let mockUserRepository: jest.Mocked<UserRepository>;
+  let mockEventEmitter: jest.Mocked<EventEmitter2>;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UserService,
+        {
+          provide: UserRepository,
+          useValue: {
+            create: jest.fn(),
+            findById: jest.fn(),
+            findByEmail: jest.fn(),
+          },
+        },
+        {
+          provide: EventEmitter2,
+          useValue: {
+            emit: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<UserService>(UserService);
+    mockUserRepository = module.get(UserRepository);
+    mockEventEmitter = module.get(EventEmitter2);
+  });
+
+  describe('create', () => {
+    it('should create a user successfully', async () => {
+      const createUserDto = {
+        email: 'test@example.com',
+        password: 'password123',
+        role: UserRole.USER,
+      };
+
+      const expectedUser = {
+        id: 'user-123',
+        ...createUserDto,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockUserRepository.create.mockResolvedValue(expectedUser);
+
+      const result = await service.create(createUserDto);
+
+      expect(result).toEqual(expectedUser);
+      expect(mockUserRepository.create).toHaveBeenCalledWith(createUserDto);
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('user.created', {
+        userId: expectedUser.id,
+      });
+    });
+  });
+});
+```
+
+### **Integration Testing**
+```typescript
+// ✅ API Integration Tests
+describe('UserController (e2e)', () => {
+  let app: INestApplication;
+  let prisma: PrismaService;
+
+  beforeEach(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    prisma = app.get<PrismaService>(PrismaService);
+    
+    await app.init();
+  });
+
+  afterEach(async () => {
+    await prisma.user.deleteMany();
+    await app.close();
+  });
+
+  describe('/users (POST)', () => {
+    it('should create a new user', async () => {
+      const createUserDto = {
+        email: 'test@example.com',
+        password: 'password123',
+        role: UserRole.USER,
+      };
+
+      const response = await request(app.getHttpServer())
+        .post('/users')
+        .send(createUserDto)
+        .expect(201);
+
+      expect(response.body).toHaveProperty('id');
+      expect(response.body.email).toBe(createUserDto.email);
+      expect(response.body.role).toBe(createUserDto.role);
+    });
+  });
+});
+```
+
+## 📝 **Dokumentation & API Specs**
+
+### **OpenAPI/Swagger**
+```typescript
+// ✅ API Documentation
+@ApiTags('users')
+@Controller('users')
+export class UserController {
+  @ApiOperation({ summary: 'Create a new user' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'User created successfully',
+    type: UserResponseDto 
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Bad request - validation failed' 
+  })
+  @ApiResponse({ 
+    status: 409, 
+    description: 'Conflict - email already exists' 
+  })
+  @Post()
+  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.userService.create(createUserDto);
+  }
+}
+```
+
+## 🚫 **Backend-Verbote**
+
+### **Sicherheit**
+```typescript
+// ❌ NICHT erlaubt
+app.use(cors()); // Zu permissiv
+app.use(helmet()); // Fehlende Sicherheits-Header
+
+// ✅ Erlaubt
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+```
+
+### **Performance**
+```typescript
+// ❌ NICHT erlaubt
+const users = await prisma.user.findMany(); // Alle User laden
+const user = await prisma.user.findUnique({ where: { id } }); // Kein Caching
+
+// ✅ Erlaubt
+const users = await prisma.user.findMany({
+  take: 50,
+  orderBy: { createdAt: 'desc' }
+});
+const user = await this.cacheService.get(`user:${id}`) || 
+             await prisma.user.findUnique({ where: { id } });
+```
+
+## ✅ **Backend-Erfordernisse**
+
+### **Architektur**
+- Clean Architecture mit klaren Schichten
+- Dependency Injection für Testbarkeit
+- Repository Pattern für Datenzugriff
+- Service Layer für Business Logic
+
+### **Sicherheit**
+- JWT-basierte Authentifizierung
+- Role-Based Access Control (RBAC)
+- Input Validation mit DTOs
+- SQL Injection Protection
+- Rate Limiting
+
+### **Performance**
+- Redis Caching für häufige Abfragen
+- Database Query Optimization
+- Connection Pooling
+- Async/Await Pattern
+
+### **Testing**
+- Unit Tests für Services
+- Integration Tests für APIs
+- E2E Tests für kritische Flows
+- Test Coverage > 90%
+
+### **Monitoring**
+- Structured Logging
+- Performance Metrics
+- Error Tracking
+- Health Checks
+description:
+globs:
+alwaysApply: false
+---

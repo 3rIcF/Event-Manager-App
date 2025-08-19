@@ -1,0 +1,446 @@
+# Frontend-spezifische Regeln
+
+## 📱 **React Native & Mobile App**
+
+### **Component-Struktur**
+```typescript
+// ✅ Korrekte Struktur
+interface ComponentProps {
+  data: EntityData;
+  onAction: (action: ActionType) => void;
+  isLoading?: boolean;
+  variant?: 'default' | 'compact' | 'detailed';
+}
+
+export const Component: React.FC<ComponentProps> = ({
+  data,
+  onAction,
+  isLoading = false,
+  variant = 'default'
+}) => {
+  // Implementation
+};
+```
+
+### **State Management**
+```typescript
+// ✅ Zustand Hook
+export const useEntityState = () => {
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchEntities = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await api.get('/entities');
+      setEntities(response.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return {
+    entities,
+    isLoading,
+    error,
+    fetchEntities,
+  };
+};
+```
+
+### **Navigation**
+```typescript
+// ✅ Navigation Hook
+export const useNavigation = () => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  
+  const navigateToEntity = useCallback((entityId: string) => {
+    navigation.navigate('EntityDetail', { entityId });
+  }, [navigation]);
+
+  return { navigateToEntity };
+};
+```
+
+## 🌐 **Web App & PWA**
+
+### **Component-Patterns**
+```typescript
+// ✅ Web Component
+interface WebComponentProps {
+  data: EntityData;
+  onAction: (action: ActionType) => void;
+  theme?: 'light' | 'dark';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export const WebComponent: React.FC<WebComponentProps> = ({
+  data,
+  onAction,
+  theme = 'light',
+  size = 'md'
+}) => {
+  const className = cn(
+    'component',
+    `theme-${theme}`,
+    `size-${size}`
+  );
+
+  return (
+    <div className={className}>
+      {/* Implementation */}
+    </div>
+  );
+};
+```
+
+### **Responsive Design**
+```typescript
+// ✅ Responsive Hook
+export const useResponsive = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkSize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+      setIsDesktop(width >= 1024);
+    };
+
+    checkSize();
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
+
+  return { isMobile, isTablet, isDesktop };
+};
+```
+
+## 🎨 **UI-Komponenten**
+
+### **Design System**
+```typescript
+// ✅ Design System Variants
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-all",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-white hover:bg-destructive/90",
+        outline: "border bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3",
+        lg: "h-10 rounded-md px-6",
+        icon: "h-9 w-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
+```
+
+### **Accessibility**
+```typescript
+// ✅ Accessibility-first Components
+export const AccessibleButton: React.FC<ButtonProps> = ({
+  children,
+  'aria-label': ariaLabel,
+  ...props
+}) => {
+  return (
+    <button
+      {...props}
+      aria-label={ariaLabel}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          props.onClick?.(e as any);
+        }
+      }}
+    >
+      {children}
+    </button>
+  );
+};
+```
+
+## 🔄 **API-Integration**
+
+### **API-Service Pattern**
+```typescript
+// ✅ API Service
+export class EntityApiService {
+  private readonly baseUrl = '/api/entities';
+
+  async getAll(params?: QueryParams): Promise<PaginatedResponse<Entity>> {
+    try {
+      const response = await api.get(this.baseUrl, { params });
+      return response.data;
+    } catch (error) {
+      throw new ApiError('Failed to fetch entities', error);
+    }
+  }
+
+  async create(data: CreateEntityDto): Promise<Entity> {
+    try {
+      const response = await api.post(this.baseUrl, data);
+      return response.data;
+    } catch (error) {
+      throw new ApiError('Failed to create entity', error);
+    }
+  }
+
+  async update(id: string, data: UpdateEntityDto): Promise<Entity> {
+    try {
+      const response = await api.put(`${this.baseUrl}/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw new ApiError('Failed to update entity', error);
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      await api.delete(`${this.baseUrl}/${id}`);
+    } catch (error) {
+      throw new ApiError('Failed to delete entity', error);
+    }
+  }
+}
+```
+
+### **Error Handling**
+```typescript
+// ✅ Error Boundary
+export class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+    // Log to error reporting service
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-boundary">
+          <h2>Something went wrong</h2>
+          <button onClick={() => this.setState({ hasError: false })}>
+            Try again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+## 🧪 **Frontend Testing**
+
+### **Component Testing**
+```typescript
+// ✅ Component Test
+describe('EntityCard', () => {
+  const mockEntity: Entity = {
+    id: '1',
+    name: 'Test Entity',
+    email: 'test@example.com',
+    role: UserRole.ORGANIZER,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockProps: EntityCardProps = {
+    entity: mockEntity,
+    onEdit: jest.fn(),
+    onDelete: jest.fn(),
+  };
+
+  it('renders entity information correctly', () => {
+    render(<EntityCard {...mockProps} />);
+    
+    expect(screen.getByText('Test Entity')).toBeInTheDocument();
+    expect(screen.getByText('test@example.com')).toBeInTheDocument();
+    expect(screen.getByText('ORGANIZER')).toBeInTheDocument();
+  });
+
+  it('calls onEdit when edit button is clicked', () => {
+    render(<EntityCard {...mockProps} />);
+    
+    const editButton = screen.getByRole('button', { name: /edit/i });
+    fireEvent.click(editButton);
+    
+    expect(mockProps.onEdit).toHaveBeenCalledWith('1');
+  });
+});
+```
+
+### **Hook Testing**
+```typescript
+// ✅ Hook Test
+describe('useEntityState', () => {
+  it('should fetch entities on mount', async () => {
+    const mockApi = {
+      get: jest.fn().mockResolvedValue({ data: [] }),
+    };
+
+    renderHook(() => useEntityState(), {
+      wrapper: ({ children }) => (
+        <ApiProvider api={mockApi}>
+          {children}
+        </ApiProvider>
+      ),
+    });
+
+    expect(mockApi.get).toHaveBeenCalledWith('/entities');
+  });
+});
+```
+
+## 🎯 **Performance-Optimierung**
+
+### **Memoization**
+```typescript
+// ✅ Memoized Components
+export const MemoizedComponent = React.memo<ComponentProps>(({
+  data,
+  onAction,
+}) => {
+  const memoizedData = useMemo(() => {
+    return data.map(item => ({
+      ...item,
+      processed: processItem(item),
+    }));
+  }, [data]);
+
+  const memoizedAction = useCallback((action: ActionType) => {
+    onAction(action);
+  }, [onAction]);
+
+  return (
+    <div>
+      {memoizedData.map(item => (
+        <ItemComponent
+          key={item.id}
+          item={item}
+          onAction={memoizedAction}
+        />
+      ))}
+    </div>
+  );
+});
+```
+
+### **Lazy Loading**
+```typescript
+// ✅ Lazy Loading
+const LazyComponent = React.lazy(() => import('./LazyComponent'));
+
+export const App: React.FC = () => {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <LazyComponent />
+    </Suspense>
+  );
+};
+```
+
+## 🚫 **Frontend-Verbote**
+
+### **React**
+```typescript
+// ❌ NICHT erlaubt
+const Component = (props) => {
+  // Keine Typisierung
+};
+
+// ✅ Erlaubt
+const Component: React.FC<ComponentProps> = (props) => {
+  // Vollständige Typisierung
+};
+```
+
+### **State Management**
+```typescript
+// ❌ NICHT erlaubt
+const [state, setState] = useState();
+
+// ✅ Erlaubt
+const [state, setState] = useState<EntityState>(initialState);
+```
+
+### **Event Handling**
+```typescript
+// ❌ NICHT erlaubt
+onClick={() => {
+  // Inline-Funktionen
+}}
+
+// ✅ Erlaubt
+const handleClick = useCallback(() => {
+  // Memoized-Funktionen
+}, [dependencies]);
+
+onClick={handleClick}
+```
+
+## ✅ **Frontend-Erfordernisse**
+
+### **TypeScript**
+- Alle Komponenten müssen vollständig typisiert sein
+- Props-Interfaces für alle Komponenten
+- Generic Types für wiederverwendbare Komponenten
+- Strict Mode aktiviert
+
+### **Performance**
+- React.memo für schwere Komponenten
+- useCallback für Event-Handler
+- useMemo für teure Berechnungen
+- Lazy Loading für große Komponenten
+
+### **Accessibility**
+- ARIA-Labels für alle interaktiven Elemente
+- Keyboard-Navigation unterstützen
+- Screen-Reader-kompatible Struktur
+- Kontrast-Verhältnisse einhalten
+
+### **Testing**
+- Unit-Tests für alle Komponenten
+- Integration-Tests für User-Flows
+- E2E-Tests für kritische Pfade
+- Test-Coverage > 80%
+description:
+globs:
+alwaysApply: false
+---

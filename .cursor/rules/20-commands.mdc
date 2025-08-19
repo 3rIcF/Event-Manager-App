@@ -1,0 +1,495 @@
+# Build, Test & Run Kommandos
+
+## 🚀 **Hauptkommandos (Root-Level)**
+
+### **Entwicklung**
+```bash
+# Alle Services starten
+pnpm dev
+
+# Alle Services bauen
+pnpm build
+
+# Code-Qualität prüfen
+pnpm lint
+pnpm type-check
+
+# Tests ausführen
+pnpm test
+
+# Aufräumen
+pnpm clean
+```
+
+### **Datenbank-Management**
+```bash
+# Migrationen deployen
+pnpm db:migrate
+
+# Prisma Studio öffnen
+pnpm db:studio
+
+# Prisma Client generieren
+pnpm db:generate
+
+# Admin-Benutzer erstellen
+pnpm create-admin
+```
+
+### **Docker-Services**
+```bash
+# Lokale Services starten
+pnpm docker:up
+
+# Services stoppen
+pnpm docker:down
+
+# Logs anzeigen
+pnpm docker:logs
+```
+
+## 🏗️ **Backend-Kommandos (apps/api/)**
+
+### **Entwicklung**
+```bash
+cd apps/api
+
+# Entwicklungsserver starten
+pnpm dev
+
+# Produktions-Build
+pnpm build
+
+# Code-Qualität
+pnpm lint
+pnpm type-check
+
+# Tests
+pnpm test
+pnpm test:watch
+pnpm test:coverage
+```
+
+### **Datenbank**
+```bash
+cd apps/api
+
+# Prisma Client generieren
+pnpm prisma generate
+
+# Migrationen erstellen
+pnpm prisma migrate dev --name migration_name
+
+# Migrationen deployen
+pnpm prisma migrate deploy
+
+# Datenbank zurücksetzen
+pnpm prisma migrate reset
+
+# Prisma Studio öffnen
+pnpm prisma studio
+
+# Datenbank pushen (für Entwicklung)
+pnpm prisma db push
+
+# Seed-Daten einspielen
+pnpm prisma db seed
+```
+
+### **Deployment**
+```bash
+cd apps/api
+
+# Produktions-Build
+pnpm build
+
+# Starten
+pnpm start:prod
+
+# Health-Check
+curl http://localhost:3000/health
+```
+
+## 📱 **Mobile App Kommandos (apps/mobile-web/)**
+
+### **Entwicklung**
+```bash
+cd apps/mobile-web
+
+# Expo Development Server
+pnpm dev
+
+# iOS Simulator starten
+pnpm ios
+
+# Android Emulator starten
+pnpm android
+
+# Web-Version starten
+pnpm web
+```
+
+### **Build & Deployment**
+```bash
+cd apps/mobile-web
+
+# Production Build
+pnpm build
+
+# EAS Build (Expo Application Services)
+pnpm eas build --platform ios
+pnpm eas build --platform android
+
+# EAS Submit
+pnpm eas submit --platform ios
+pnpm eas submit --platform android
+```
+
+### **Testing**
+```bash
+cd apps/mobile-web
+
+# Tests ausführen
+pnpm test
+
+# E2E Tests
+pnpm test:e2e
+
+# Type-Check
+pnpm type-check
+```
+
+## 🌐 **Web App Kommandos (apps/web/)**
+
+### **Entwicklung**
+```bash
+cd apps/web
+
+# Development Server
+pnpm dev
+
+# Build
+pnpm build
+
+# Preview
+pnpm preview
+
+# Code-Qualität
+pnpm lint
+pnpm type-check
+```
+
+### **Testing**
+```bash
+cd apps/web
+
+# Unit Tests
+pnpm test
+
+# E2E Tests
+pnpm test:e2e
+
+# Test Coverage
+pnpm test:coverage
+
+# Test Dashboard
+pnpm test:dashboard
+```
+
+## 📦 **Package-Kommandos**
+
+### **Types Package (packages/types/)**
+```bash
+cd packages/types
+
+# Build
+pnpm build
+
+# Type-Check
+pnpm type-check
+
+# Tests
+pnpm test
+```
+
+### **UI Package (packages/ui/)**
+```bash
+cd packages/ui
+
+# Build
+pnpm build
+
+# Storybook starten
+pnpm storybook
+
+# Tests
+pnpm test
+
+# Type-Check
+pnpm type-check
+```
+
+### **Config Package (packages/config/)**
+```bash
+cd packages/config
+
+# Build
+pnpm build
+
+# Type-Check
+pnpm type-check
+```
+
+## 🧪 **Testing-Strategien**
+
+### **Unit Tests**
+```bash
+# Alle Unit Tests
+pnpm test
+
+# Spezifische Tests
+pnpm test --testNamePattern="UserService"
+
+# Coverage Report
+pnpm test --coverage
+
+# Watch Mode
+pnpm test --watch
+```
+
+### **Integration Tests**
+```bash
+# API Integration Tests
+cd apps/api
+pnpm test:integration
+
+# E2E Tests
+pnpm test:e2e
+```
+
+### **Performance Tests**
+```bash
+# API Performance Tests
+cd apps/api
+pnpm test:performance
+
+# Load Tests
+pnpm test:load
+```
+
+## 🔧 **Development Tools**
+
+### **Code-Qualität**
+```bash
+# ESLint
+pnpm lint
+
+# Prettier
+pnpm format
+
+# TypeScript Compiler
+pnpm type-check
+
+# Husky Pre-commit Hooks
+pnpm prepare
+```
+
+### **Debugging**
+```bash
+# Backend Debug
+cd apps/api
+pnpm dev:debug
+
+# Mobile Debug
+cd apps/mobile-web
+pnpm dev --inspect
+
+# Web Debug
+cd apps/web
+pnpm dev --inspect
+```
+
+## 🐳 **Docker-Kommandos**
+
+### **Lokale Entwicklung**
+```bash
+# Alle Services starten
+docker-compose -f infra/docker-compose.yml up -d
+
+# Spezifische Services
+docker-compose -f infra/docker-compose.yml up -d redis minio
+
+# Logs anzeigen
+docker-compose -f infra/docker-compose.yml logs -f
+
+# Services stoppen
+docker-compose -f infra/docker-compose.yml down
+
+# Volumes löschen
+docker-compose -f infra/docker-compose.yml down -v
+```
+
+### **Supabase Local**
+```bash
+# Supabase lokal starten
+cd infra
+supabase start
+
+# Supabase stoppen
+supabase stop
+
+# Status prüfen
+supabase status
+
+# Logs anzeigen
+supabase logs
+```
+
+## 📊 **Monitoring & Debugging**
+
+### **Health Checks**
+```bash
+# API Health
+curl http://localhost:3000/health
+
+# Database Health
+curl http://localhost:3000/health/database
+
+# Redis Health
+curl http://localhost:3000/health/redis
+
+# MinIO Health
+curl http://localhost:3000/health/storage
+```
+
+### **Logs**
+```bash
+# Backend Logs
+cd apps/api
+pnpm logs
+
+# Docker Logs
+docker-compose -f infra/docker-compose.yml logs -f api
+
+# Supabase Logs
+supabase logs
+```
+
+## 🚀 **Deployment-Kommandos**
+
+### **Staging**
+```bash
+# Staging Build
+pnpm build:staging
+
+# Staging Deploy
+pnpm deploy:staging
+
+# Staging Tests
+pnpm test:staging
+```
+
+### **Production**
+```bash
+# Production Build
+pnpm build:prod
+
+# Production Deploy
+pnpm deploy:prod
+
+# Production Health Check
+pnpm health:prod
+```
+
+### **Rollback**
+```bash
+# Rollback zur vorherigen Version
+pnpm rollback
+
+# Rollback zu spezifischer Version
+pnpm rollback --version=v1.2.3
+```
+
+## 📝 **Utility-Kommandos**
+
+### **Code-Generierung**
+```bash
+# NestJS Resource generieren
+cd apps/api
+pnpm generate:resource users
+
+# Prisma Model generieren
+pnpm prisma generate
+
+# TypeScript Types generieren
+pnpm generate:types
+```
+
+### **Datenbank-Utilities**
+```bash
+# Backup erstellen
+pnpm db:backup
+
+# Backup wiederherstellen
+pnpm db:restore
+
+# Schema exportieren
+pnpm db:export
+
+# Seed-Daten generieren
+pnpm db:seed:generate
+```
+
+### **Cleanup**
+```bash
+# Node Modules löschen
+pnpm clean:modules
+
+# Build-Ordner löschen
+pnpm clean:build
+
+# Cache löschen
+pnpm clean:cache
+
+# Alles löschen
+pnpm clean:all
+```
+
+## 🔍 **Troubleshooting**
+
+### **Häufige Probleme**
+```bash
+# Node Modules neu installieren
+rm -rf node_modules
+pnpm install
+
+# Prisma Client neu generieren
+cd apps/api
+pnpm prisma generate
+
+# Docker neu starten
+pnpm docker:down
+pnpm docker:up
+
+# Cache löschen
+pnpm clean:cache
+```
+
+### **Debug-Modi**
+```bash
+# Backend Debug
+cd apps/api
+DEBUG=* pnpm dev
+
+# Mobile Debug
+cd apps/mobile-web
+EXPO_DEBUG=1 pnpm dev
+
+# Web Debug
+cd apps/web
+DEBUG=* pnpm dev
+```
+description:
+globs:
+alwaysApply: false
+---

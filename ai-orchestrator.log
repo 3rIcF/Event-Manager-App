@@ -1,0 +1,231 @@
+[2025-08-18T21:09:10.222Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:09:10.229Z] [INFO] Workflow wird mit Phase ANALYSIS_PHASE gestartet
+[2025-08-18T21:09:10.231Z] [INFO] Phase ANALYSIS_PHASE wird gestartet
+[2025-08-18T21:09:10.260Z] [INFO] Datei /mnt/c/Users/eric_/VSC Programme/EventManagerApp/Event-Manager-App/workflow_state.md erfolgreich geschrieben
+[2025-08-18T21:09:10.263Z] [INFO] Aktiviere Agent context-specialist für Phase ANALYSIS_PHASE
+[2025-08-18T21:09:10.265Z] [ERROR] Agent context-specialist nicht gefunden
+[2025-08-18T21:09:10.268Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:09:10.270Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:09:10.273Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:09:10.275Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:09:10.278Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:09:10.280Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:09:10.282Z] [INFO] Aktiviere Agent system-architect für Phase ANALYSIS_PHASE
+[2025-08-18T21:09:10.285Z] [INFO] Agent system-architect aktiviert
+[2025-08-18T21:09:10.288Z] [INFO] Mock-Agent system-architect (System Architect) führt Aufgabe aus
+[2025-08-18T21:09:15.704Z] [INFO] Mock-Agent system-architect hat Aufgabe abgeschlossen
+[2025-08-18T21:09:15.709Z] [INFO] Agent system-architect abgeschlossen
+[2025-08-18T21:09:15.713Z] [INFO] Aktiviere Agent security-reviewer für Phase ANALYSIS_PHASE
+[2025-08-18T21:09:15.715Z] [INFO] Agent security-reviewer aktiviert
+[2025-08-18T21:09:15.717Z] [INFO] Mock-Agent security-reviewer (Security Reviewer) führt Aufgabe aus
+[2025-08-18T21:09:22.177Z] [INFO] Mock-Agent security-reviewer hat Aufgabe abgeschlossen
+[2025-08-18T21:09:22.180Z] [INFO] Agent security-reviewer abgeschlossen
+[2025-08-18T21:09:22.234Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:09:22.244Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:09:22.246Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:09:22.248Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:09:22.251Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:09:22.253Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:09:22.257Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:17:10.671Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:17:10.686Z] [INFO] Autonomer Workflow-Modus wird gestartet
+[2025-08-18T21:17:10.687Z] [INFO] Starte autonome Phase: INITIALIZATION
+[2025-08-18T21:17:10.688Z] [INFO] Phase INITIALIZATION wird gestartet
+[2025-08-18T21:17:10.897Z] [INFO] Datei C:\Users\eric_\VSC Programme\EventManagerApp\Event-Manager-App\workflow_state.md erfolgreich geschrieben
+[2025-08-18T21:17:10.898Z] [INFO] Aktiviere Agent context-specialist für Phase INITIALIZATION
+[2025-08-18T21:17:10.898Z] [ERROR] Agent context-specialist nicht gefunden
+[2025-08-18T21:17:10.899Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:17:10.900Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:17:10.901Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:17:10.902Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:17:10.902Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:17:10.903Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:22:05.323Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:22:05.329Z] [INFO] Autonomer Workflow-Modus wird gestartet
+[2025-08-18T21:22:05.329Z] [INFO] Starte autonome Phase: INITIALIZATION
+[2025-08-18T21:22:05.330Z] [INFO] Phase INITIALIZATION wird gestartet
+[2025-08-18T21:22:05.411Z] [INFO] Datei C:\Users\eric_\VSC Programme\EventManagerApp\Event-Manager-App\workflow_state.md erfolgreich geschrieben
+[2025-08-18T21:22:05.412Z] [INFO] Aktiviere Agent context-specialist für Phase INITIALIZATION
+[2025-08-18T21:22:05.413Z] [ERROR] Agent context-specialist nicht gefunden
+[2025-08-18T21:22:05.414Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:22:05.415Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:22:05.417Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:22:05.418Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:22:05.419Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:22:05.420Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:25:07.743Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:25:07.750Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:25:07.750Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:25:07.752Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:25:07.753Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:25:07.754Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:25:07.755Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:25:40.154Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:25:40.170Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:25:40.171Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:25:40.172Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:25:40.172Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:25:40.173Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:25:40.174Z] [INFO] Autonomer Workflow-Modus wird gestartet
+[2025-08-18T21:25:40.174Z] [INFO] Starte autonome Phase: INITIALIZATION
+[2025-08-18T21:25:40.175Z] [INFO] Phase INITIALIZATION wird gestartet
+[2025-08-18T21:25:40.417Z] [INFO] Datei C:\Users\eric_\VSC Programme\EventManagerApp\Event-Manager-App\workflow_state.md erfolgreich geschrieben
+[2025-08-18T21:25:40.418Z] [INFO] Aktiviere Agent context-specialist für Phase INITIALIZATION
+[2025-08-18T21:25:40.419Z] [INFO] Agent context-specialist aktiviert
+[2025-08-18T21:25:40.419Z] [INFO] Mock-Agent context-specialist (Context Specialist) führt Aufgabe aus
+[2025-08-18T21:25:40.420Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:25:44.685Z] [INFO] Mock-Agent context-specialist hat Aufgabe abgeschlossen
+[2025-08-18T21:25:44.686Z] [INFO] Agent context-specialist abgeschlossen
+[2025-08-18T21:26:33.886Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:26:33.892Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:26:33.892Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:26:33.893Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:26:33.893Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:26:33.894Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:26:33.896Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:45:41.228Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:45:41.235Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:45:41.238Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:45:41.240Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:45:41.243Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:45:41.246Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:45:41.248Z] [INFO] Workflow wird mit Phase INITIALIZATION gestartet
+[2025-08-18T21:45:41.251Z] [INFO] Phase INITIALIZATION wird gestartet
+[2025-08-18T21:45:41.316Z] [INFO] Datei /mnt/c/Users/eric_/VSC Programme/EventManagerApp/Event-Manager-App/workflow_state.md erfolgreich geschrieben
+[2025-08-18T21:45:41.320Z] [INFO] Aktiviere Agent context-specialist für Phase INITIALIZATION
+[2025-08-18T21:45:41.322Z] [INFO] Agent context-specialist aktiviert
+[2025-08-18T21:45:41.325Z] [INFO] Mock-Agent context-specialist (Context Specialist) führt Aufgabe aus
+[2025-08-18T21:45:41.329Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:45:44.136Z] [INFO] Mock-Agent context-specialist hat Aufgabe abgeschlossen
+[2025-08-18T21:45:44.139Z] [INFO] Agent context-specialist abgeschlossen
+[2025-08-18T21:45:44.184Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:45:44.188Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:45:44.190Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:45:44.192Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:45:44.194Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:45:44.197Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:45:44.203Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:53:05.377Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:53:05.391Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:53:05.391Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:53:05.392Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:53:05.393Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:53:05.393Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:53:05.396Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:53:29.628Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:53:29.633Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:53:29.634Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:53:29.635Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:53:29.635Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:53:29.636Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:53:29.638Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:54:53.591Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:54:53.599Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:54:53.600Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:54:53.601Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:54:53.601Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:54:53.602Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:54:53.603Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:55:16.278Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:55:16.284Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:55:16.285Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:55:16.286Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:55:16.286Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:55:16.287Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:55:16.288Z] [ERROR] Ungültige Phase: phase
+[2025-08-18T21:55:16.288Z] [INFO] Verfügbare Phasen: INITIALIZATION, REQUIREMENTS_GATHERING, ANALYSIS_PHASE, BLUEPRINT_PHASE, IMPLEMENTATION_PHASE, TESTING_PHASE, DEPLOYMENT_PHASE, REVIEW_PHASE
+[2025-08-18T21:55:16.289Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:55:33.973Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:55:33.980Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:55:33.980Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:55:33.981Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:55:33.982Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:55:33.982Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:55:33.982Z] [ERROR] Ungültige Phase: phase
+[2025-08-18T21:55:33.983Z] [INFO] Verfügbare Phasen: INITIALIZATION, REQUIREMENTS_GATHERING, ANALYSIS_PHASE, BLUEPRINT_PHASE, IMPLEMENTATION_PHASE, TESTING_PHASE, DEPLOYMENT_PHASE, REVIEW_PHASE
+[2025-08-18T21:55:33.983Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:56:09.424Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:56:09.431Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:56:09.432Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:56:09.432Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:56:09.433Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:56:09.433Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:56:09.436Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:56:33.950Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:56:33.957Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:56:33.958Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:56:33.958Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:56:33.959Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:56:33.960Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:56:33.961Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:56:53.018Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:56:53.025Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:56:53.026Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:56:53.026Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:56:53.027Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:56:53.027Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:56:53.028Z] [INFO] Phase BLUEPRINT_PHASE wird gestartet
+[2025-08-18T21:56:53.108Z] [INFO] Datei C:\Users\eric_\VSC Programme\EventManagerApp\Event-Manager-App\workflow_state.md erfolgreich geschrieben
+[2025-08-18T21:56:53.110Z] [INFO] Aktiviere Agent system-architect für Phase BLUEPRINT_PHASE
+[2025-08-18T21:56:53.111Z] [INFO] Agent system-architect aktiviert
+[2025-08-18T21:56:53.112Z] [INFO] Mock-Agent system-architect (System Architect) führt Aufgabe aus
+[2025-08-18T21:56:53.112Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:56:55.568Z] [INFO] Mock-Agent system-architect hat Aufgabe abgeschlossen
+[2025-08-18T21:56:55.569Z] [INFO] Agent system-architect abgeschlossen
+[2025-08-18T21:56:55.569Z] [INFO] Aktiviere Agent security-reviewer für Phase BLUEPRINT_PHASE
+[2025-08-18T21:56:55.570Z] [INFO] Agent security-reviewer aktiviert
+[2025-08-18T21:56:55.571Z] [INFO] Mock-Agent security-reviewer (Security Reviewer) führt Aufgabe aus
+[2025-08-18T21:56:58.884Z] [INFO] Mock-Agent security-reviewer hat Aufgabe abgeschlossen
+[2025-08-18T21:56:58.884Z] [INFO] Agent security-reviewer abgeschlossen
+[2025-08-18T21:57:33.801Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-18T21:57:33.808Z] [INFO] Agent system-architect registriert
+[2025-08-18T21:57:33.809Z] [INFO] Agent feature-developer registriert
+[2025-08-18T21:57:33.809Z] [INFO] Agent security-reviewer registriert
+[2025-08-18T21:57:33.810Z] [INFO] Agent docs-writer registriert
+[2025-08-18T21:57:33.811Z] [INFO] Agent context-specialist registriert
+[2025-08-18T21:57:33.811Z] [INFO] Autonomer Workflow-Modus wird gestartet
+[2025-08-18T21:57:33.812Z] [INFO] Starte autonome Phase: INITIALIZATION
+[2025-08-18T21:57:33.812Z] [INFO] Phase INITIALIZATION wird gestartet
+[2025-08-18T21:57:33.839Z] [INFO] Datei C:\Users\eric_\VSC Programme\EventManagerApp\Event-Manager-App\workflow_state.md erfolgreich geschrieben
+[2025-08-18T21:57:33.840Z] [INFO] Aktiviere Agent context-specialist für Phase INITIALIZATION
+[2025-08-18T21:57:33.841Z] [INFO] Agent context-specialist aktiviert
+[2025-08-18T21:57:33.842Z] [INFO] Mock-Agent context-specialist (Context Specialist) führt Aufgabe aus
+[2025-08-18T21:57:33.842Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-18T21:57:40.037Z] [INFO] Mock-Agent context-specialist hat Aufgabe abgeschlossen
+[2025-08-18T21:57:40.038Z] [INFO] Agent context-specialist abgeschlossen
+[2025-08-19T00:24:39.369Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-19T00:24:39.382Z] [INFO] Agent system-architect registriert
+[2025-08-19T00:24:39.383Z] [INFO] Agent feature-developer registriert
+[2025-08-19T00:24:39.383Z] [INFO] Agent security-reviewer registriert
+[2025-08-19T00:24:39.384Z] [INFO] Agent docs-writer registriert
+[2025-08-19T00:24:39.384Z] [INFO] Agent context-specialist registriert
+[2025-08-19T00:24:39.385Z] [INFO] Agent system-architect aktiviert
+[2025-08-19T00:24:39.385Z] [INFO] Mock-Agent system-architect (System Architect) führt Aufgabe aus
+[2025-08-19T00:24:39.386Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-19T00:24:45.886Z] [INFO] Mock-Agent system-architect hat Aufgabe abgeschlossen
+[2025-08-19T00:24:45.887Z] [INFO] Agent system-architect abgeschlossen
+[2025-08-19T00:43:07.786Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-19T00:43:07.802Z] [INFO] Agent system-architect registriert
+[2025-08-19T00:43:07.802Z] [INFO] Agent feature-developer registriert
+[2025-08-19T00:43:07.803Z] [INFO] Agent security-reviewer registriert
+[2025-08-19T00:43:07.803Z] [INFO] Agent docs-writer registriert
+[2025-08-19T00:43:07.804Z] [INFO] Agent context-specialist registriert
+[2025-08-19T00:43:07.805Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-19T00:43:11.713Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-19T00:43:11.719Z] [INFO] Agent system-architect registriert
+[2025-08-19T00:43:11.720Z] [INFO] Agent feature-developer registriert
+[2025-08-19T00:43:11.721Z] [INFO] Agent security-reviewer registriert
+[2025-08-19T00:43:11.722Z] [INFO] Agent docs-writer registriert
+[2025-08-19T00:43:11.723Z] [INFO] Agent context-specialist registriert
+[2025-08-19T00:43:11.728Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-19T00:52:37.084Z] [INFO] AI Orchestrator wird initialisiert...
+[2025-08-19T00:52:37.116Z] [INFO] Agent system-architect registriert
+[2025-08-19T00:52:37.116Z] [INFO] Agent feature-developer registriert
+[2025-08-19T00:52:37.117Z] [INFO] Agent security-reviewer registriert
+[2025-08-19T00:52:37.118Z] [INFO] Agent docs-writer registriert
+[2025-08-19T00:52:37.119Z] [INFO] Agent context-specialist registriert
+[2025-08-19T00:52:37.133Z] [INFO] Workflow-State-Lock erworben
+[2025-08-19T00:52:37.134Z] [INFO] AI Orchestrator erfolgreich initialisiert
+[2025-08-19T00:52:37.139Z] [INFO] Workflow-State-Backup erstellt: C:\Users\eric_\VSC Programme\EventManagerApp\Event-Manager-App\backups\workflow\workflow_state_backup_2025-08-19T00-52-37-135Z.md
+[2025-08-19T00:52:37.143Z] [INFO] Workflow-State-Lock freigegeben
+[2025-08-19T00:52:37.144Z] [SUCCESS] Workflow-State ist gültig.

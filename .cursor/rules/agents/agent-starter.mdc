@@ -1,0 +1,210 @@
+# 🚀 **Agent-Starter: Hochautonome AI-Agenten starten**
+
+## **📋 Voraussetzungen prüfen**
+
+Bevor du einen neuen Agent startest, stelle sicher dass:
+- ✅ `curso_agent.yaml` im Root-Verzeichnis liegt
+- ✅ `.cursor/rules/` Verzeichnis existiert
+- ✅ Projekt-spezifische Regeln verfügbar sind
+
+## **🎯 Agent-Typen & Spezialisierungen**
+
+### **1. Frontend-Entwickler Agent**
+```bash
+# Starte mit Frontend-Fokus
+@agent start --type=frontend --task="Entwickle React-Komponenten für Dashboard"
+```
+
+**Verwendet Regeln:**
+- `.cursor/rules/frontend/rules.mdc`
+- `.cursor/rules/10-conventions.mdc`
+- `.cursor/rules/01-architecture.mdc`
+
+### **2. Backend-Entwickler Agent**
+```bash
+# Starte mit Backend-Fokus
+@agent start --type=backend --task="Implementiere REST-API für User-Management"
+```
+
+**Verwendet Regeln:**
+- `.cursor/rules/backend/rules.mdc`
+- `.cursor/rules/10-conventions.mdc`
+- `.cursor/rules/01-architecture.mdc`
+
+### **3. DevOps & Infrastructure Agent**
+```bash
+# Starte mit DevOps-Fokus
+@agent start --type=devops --task="Konfiguriere CI/CD Pipeline und Docker-Container"
+```
+
+**Verwendet Regeln:**
+- `.cursor/rules/devops/rules.mdc`
+- `.cursor/rules/10-conventions.mdc`
+- `.cursor/rules/01-architecture.mdc`
+
+### **4. Full-Stack Entwickler Agent**
+```bash
+# Starte mit Full-Stack-Fokus
+@agent start --type=fullstack --task="Entwickle komplette Feature von Frontend bis Backend"
+```
+
+**Verwendet Regeln:**
+- Alle verfügbaren Regeln
+- `.cursor/rules/frontend/rules.mdc`
+- `.cursor/rules/backend/rules.mdc`
+- `.cursor/rules/10-conventions.mdc`
+
+## **🔧 Manueller Agent-Start**
+
+### **Option 1: Über Cursor UI**
+1. Öffne Cursor
+2. Drücke `Ctrl+Shift+P` (oder `Cmd+Shift+P` auf Mac)
+3. Wähle "Cursor: Start New Agent"
+4. Wähle den gewünschten Agent-Typ
+5. Gib die Aufgabe ein
+
+### **Option 2: Über Command Palette**
+```bash
+# Im Cursor Terminal
+cursor agent start --type=frontend --task="Entwickle Login-Formular"
+```
+
+### **Option 3: Über Chat-Interface**
+```
+@agent start --type=frontend --task="Entwickle Login-Formular mit React Hook Form und Zod-Validierung"
+```
+
+## **📝 Task-Beschreibungen formulieren**
+
+### **✅ Gute Task-Beschreibungen:**
+```
+"Entwickle eine React-Komponente für ein User-Dashboard mit:
+- Responsive Design
+- TypeScript-Typisierung
+- Unit-Tests
+- Accessibility-Features
+- Performance-Optimierung"
+```
+
+### **❌ Schlechte Task-Beschreibungen:**
+```
+"Mach das Dashboard" (zu vage)
+"Schreib Code" (keine Spezifikation)
+```
+
+## **🎨 Agent-Verhalten steuern**
+
+### **Autonomie-Level anpassen:**
+```yaml
+# In curso_agent.yaml temporär ändern
+agent:
+  mode: supervised          # Für kritische Tasks
+  confirmation_required: true
+  feedback_frequency: high
+```
+
+### **Spezifische Regeln aktivieren:**
+```yaml
+# Spezielle Regeln für bestimmte Tasks
+task_specific_rules:
+  security_critical: true
+  performance_focused: true
+  accessibility_required: true
+```
+
+## **📊 Agent-Performance überwachen**
+
+### **Monitoring aktivieren:**
+```yaml
+monitoring:
+  agent_performance: true
+  task_completion_rate: true
+  quality_metrics: true
+  learning_progress: true
+```
+
+### **Feedback-Loop:**
+```yaml
+feedback:
+  auto_evaluation: true
+  user_rating: true
+  improvement_suggestions: true
+  knowledge_sharing: true
+```
+
+## **🔄 Agent-Wechsel & Koordination**
+
+### **Mehrere Agents parallel:**
+```bash
+# Starte mehrere spezialisierte Agents
+@agent start --type=frontend --task="UI-Komponenten entwickeln"
+@agent start --type=backend --task="API-Endpoints implementieren"
+@agent start --type=testing --task="E2E-Tests schreiben"
+```
+
+### **Agent-Kommunikation:**
+```yaml
+agent_coordination:
+  shared_knowledge_base: true
+  task_dependencies: true
+  conflict_resolution: automatic
+  progress_synchronization: true
+```
+
+## **🚨 Troubleshooting**
+
+### **Agent startet nicht:**
+1. Prüfe `curso_agent.yaml` Syntax
+2. Stelle sicher dass alle Regeln verfügbar sind
+3. Prüfe Cursor-Version (mindestens 0.40+)
+
+### **Agent verhält sich nicht wie erwartet:**
+1. Prüfe Agent-Typ und Regeln
+2. Überprüfe Task-Beschreibung
+3. Aktiviere Debug-Modus temporär
+
+### **Performance-Probleme:**
+1. Reduziere Agent-Komplexität
+2. Aktiviere Performance-Monitoring
+3. Überprüfe Ressourcenverbrauch
+
+## **🎯 Best Practices für Agent-Start**
+
+### **1. Klare Aufgaben definieren**
+- Spezifische Anforderungen
+- Akzeptanzkriterien
+- Technische Constraints
+
+### **2. Richtige Regeln wählen**
+- Agent-Typ passend zur Aufgabe
+- Projekt-spezifische Regeln
+- Qualitätsstandards
+
+### **3. Monitoring aktivieren**
+- Performance-Tracking
+- Qualitäts-Metriken
+- Lernfortschritt
+
+### **4. Feedback integrieren**
+- Automatische Bewertung
+- Benutzer-Feedback
+- Kontinuierliche Verbesserung
+
+## **🚀 Schnellstart-Beispiel**
+
+```bash
+# 1. Frontend-Agent für Dashboard starten
+@agent start --type=frontend --task="Entwickle ein responsives Dashboard mit React, TypeScript und Tailwind CSS"
+
+# 2. Backend-Agent für API starten
+@agent start --type=backend --task="Implementiere REST-API für Dashboard-Daten mit Express, Prisma und JWT-Auth"
+
+# 3. Testing-Agent für Qualitätssicherung
+@agent start --type=testing --task="Schreibe umfassende Tests für Dashboard und API mit Jest und Testing Library"
+```
+
+**Ergebnis:** Drei hochautonome Agents arbeiten parallel an verschiedenen Aspekten deines Projekts und koordinieren sich automatisch!
+description:
+globs:
+alwaysApply: false
+---

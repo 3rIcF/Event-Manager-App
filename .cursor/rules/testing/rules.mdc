@@ -1,0 +1,721 @@
+# Testing-spezifische Regeln
+
+## 🧪 **Test-Strategie & Philosophie**
+
+### **Testing-Pyramide**
+```typescript
+// ✅ Testing-Pyramide implementieren
+class TestingStrategy {
+  async implementTestingPyramid(): Promise<void> {
+    // 1. Unit Tests (Basis - 70%)
+    await this.setupUnitTests();
+    
+    // 2. Integration Tests (Mitte - 20%)
+    await this.setupIntegrationTests();
+    
+    // 3. E2E Tests (Spitze - 10%)
+    await this.setupE2ETests();
+    
+    // 4. Performance Tests
+    await this.setupPerformanceTests();
+    
+    // 5. Security Tests
+    await this.setupSecurityTests();
+  }
+}
+```
+
+### **Test-First Development**
+```typescript
+// ✅ TDD/BDD Ansatz
+describe('User Authentication', () => {
+  describe('Given a valid user', () => {
+    describe('When logging in', () => {
+      it('should return JWT token', async () => {
+        // Arrange
+        const user = createTestUser();
+        const loginData = { email: user.email, password: 'password123' };
+        
+        // Act
+        const response = await request(app)
+          .post('/auth/login')
+          .send(loginData);
+        
+        // Assert
+        expect(response.status).toBe(200);
+        expect(response.body).toHaveProperty('token');
+        expect(response.body.token).toMatch(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$/);
+      });
+    });
+  });
+});
+```
+
+## 🧩 **Unit Testing**
+
+### **Service Testing**
+```typescript
+// ✅ Service Unit Tests
+describe('UserService', () => {
+  let service: UserService;
+  let mockUserRepository: jest.Mocked<UserRepository>;
+  let mockEventEmitter: jest.Mocked<EventEmitter2>;
+  let mockLogger: jest.Mocked<Logger>;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UserService,
+        {
+          provide: UserRepository,
+          useValue: {
+            create: jest.fn(),
+            findById: jest.fn(),
+            findByEmail: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+          },
+        },
+        {
+          provide: EventEmitter2,
+          useValue: {
+            emit: jest.fn(),
+          },
+        },
+        {
+          provide: Logger,
+          useValue: {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<UserService>(UserService);
+    mockUserRepository = module.get(UserRepository);
+    mockEventEmitter = module.get(EventEmitter2);
+    mockLogger = module.get(Logger);
+  });
+
+  describe('create', () => {
+    it('should create a user successfully', async () => {
+      // Arrange
+      const createUserDto = {
+        email: 'test@example.com',
+        password: 'password123',
+        role: UserRole.USER,
+      };
+
+      const expectedUser = {
+        id: 'user-123',
+        ...createUserDto,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockUserRepository.create.mockResolvedValue(expectedUser);
+
+      // Act
+      const result = await service.create(createUserDto);
+
+      // Assert
+      expect(result).toEqual(expectedUser);
+      expect(mockUserRepository.create).toHaveBeenCalledWith(createUserDto);
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('user.created', {
+        userId: expectedUser.id,
+      });
+      expect(mockLogger.log).toHaveBeenCalledWith(`User created: ${expectedUser.id}`);
+    });
+
+    it('should throw error if email already exists', async () => {
+      // Arrange
+      const createUserDto = {
+        email: 'existing@example.com',
+        password: 'password123',
+        role: UserRole.USER,
+      };
+
+      mockUserRepository.create.mockRejectedValue(new Error('Email already exists'));
+
+      // Act & Assert
+      await expect(service.create(createUserDto)).rejects.toThrow('Email already exists');
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+  });
+});
+```
+
+### **Component Testing (React)**
+```typescript
+// ✅ React Component Tests
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { UserForm } from './UserForm';
+
+describe('UserForm', () => {
+  const mockOnSubmit = jest.fn();
+  const defaultProps = {
+    onSubmit: mockOnSubmit,
+    initialData: null,
+    isLoading: false,
+  };
+
+  beforeEach(() => {
+    mockOnSubmit.mockClear();
+  });
+
+  it('renders form fields correctly', () => {
+    render(<UserForm {...defaultProps} />);
+    
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/role/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument();
+  });
+
+  it('submits form with valid data', async () => {
+    const user = userEvent.setup();
+    render(<UserForm {...defaultProps} />);
+    
+    // Fill form
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.selectOptions(screen.getByLabelText(/role/i), 'USER');
+    
+    // Submit
+    await user.click(screen.getByRole('button', { name: /submit/i }));
+    
+    expect(mockOnSubmit).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      password: 'password123',
+      role: 'USER',
+    });
+  });
+
+  it('shows validation errors for invalid data', async () => {
+    const user = userEvent.setup();
+    render(<UserForm {...defaultProps} />);
+    
+    // Submit empty form
+    await user.click(screen.getByRole('button', { name: /submit/i }));
+    
+    expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+    expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+  });
+
+  it('shows loading state', () => {
+    render(<UserForm {...defaultProps} isLoading={true} />);
+    
+    expect(screen.getByRole('button', { name: /submit/i })).toBeDisabled();
+    expect(screen.getByText(/saving/i)).toBeInTheDocument();
+  });
+});
+```
+
+## 🔗 **Integration Testing**
+
+### **API Integration Tests**
+```typescript
+// ✅ API Integration Tests
+describe('User API (e2e)', () => {
+  let app: INestApplication;
+  let prisma: PrismaService;
+  let authToken: string;
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    prisma = app.get<PrismaService>(PrismaService);
+    
+    // Setup test database
+    await prisma.$connect();
+    await prisma.user.deleteMany();
+    
+    // Create test user and get auth token
+    const testUser = await prisma.user.create({
+      data: {
+        email: 'admin@test.com',
+        password: await bcrypt.hash('password123', 10),
+        role: UserRole.ADMIN,
+      },
+    });
+    
+    const response = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'admin@test.com', password: 'password123' });
+    
+    authToken = response.body.token;
+    
+    await app.init();
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+    await app.close();
+  });
+
+  afterEach(async () => {
+    // Clean up after each test
+    await prisma.user.deleteMany({
+      where: { email: { not: 'admin@test.com' } },
+    });
+  });
+
+  describe('/users (POST)', () => {
+    it('should create a new user', async () => {
+      const createUserDto = {
+        email: 'newuser@test.com',
+        password: 'password123',
+        role: UserRole.USER,
+      };
+
+      const response = await request(app.getHttpServer())
+        .post('/users')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(createUserDto)
+        .expect(201);
+
+      expect(response.body).toHaveProperty('id');
+      expect(response.body.email).toBe(createUserDto.email);
+      expect(response.body.role).toBe(createUserDto.role);
+      expect(response.body.password).toBeUndefined(); // Password should not be returned
+    });
+
+    it('should return 400 for invalid data', async () => {
+      const invalidUserDto = {
+        email: 'invalid-email',
+        password: '123', // Too short
+        role: 'INVALID_ROLE',
+      };
+
+      await request(app.getHttpServer())
+        .post('/users')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(invalidUserDto)
+        .expect(400);
+    });
+
+    it('should return 401 without authentication', async () => {
+      const createUserDto = {
+        email: 'unauthorized@test.com',
+        password: 'password123',
+        role: UserRole.USER,
+      };
+
+      await request(app.getHttpServer())
+        .post('/users')
+        .send(createUserDto)
+        .expect(401);
+    });
+  });
+
+  describe('/users/:id (GET)', () => {
+    it('should return user by id', async () => {
+      // Create test user
+      const testUser = await prisma.user.create({
+        data: {
+          email: 'getuser@test.com',
+          password: 'password123',
+          role: UserRole.USER,
+        },
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`/users/${testUser.id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
+
+      expect(response.body.id).toBe(testUser.id);
+      expect(response.body.email).toBe(testUser.email);
+      expect(response.body.password).toBeUndefined();
+    });
+
+    it('should return 404 for non-existent user', async () => {
+      const nonExistentId = 'non-existent-id';
+
+      await request(app.getHttpServer())
+        .get(`/users/${nonExistentId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(404);
+    });
+  });
+});
+```
+
+## 🌐 **E2E Testing**
+
+### **Playwright E2E Tests**
+```typescript
+// ✅ Playwright E2E Tests
+import { test, expect } from '@playwright/test';
+
+test.describe('User Management E2E', () => {
+  test.beforeEach(async ({ page }) => {
+    // Navigate to login page
+    await page.goto('/login');
+    
+    // Login as admin
+    await page.fill('[data-testid="email-input"]', 'admin@example.com');
+    await page.fill('[data-testid="password-input"]', 'admin123');
+    await page.click('[data-testid="login-button"]');
+    
+    // Wait for redirect to dashboard
+    await page.waitForURL('/dashboard');
+  });
+
+  test('should create a new user', async ({ page }) => {
+    // Navigate to user management
+    await page.click('[data-testid="nav-users"]');
+    await page.click('[data-testid="create-user-button"]');
+    
+    // Fill user form
+    await page.fill('[data-testid="user-email"]', 'newuser@example.com');
+    await page.fill('[data-testid="user-password"]', 'password123');
+    await page.selectOption('[data-testid="user-role"]', 'USER');
+    
+    // Submit form
+    await page.click('[data-testid="submit-button"]');
+    
+    // Verify success message
+    await expect(page.locator('[data-testid="success-message"]')).toBeVisible();
+    await expect(page.locator('[data-testid="success-message"]')).toContainText('User created successfully');
+    
+    // Verify user appears in list
+    await page.click('[data-testid="nav-users"]');
+    await expect(page.locator('text=newuser@example.com')).toBeVisible();
+  });
+
+  test('should edit existing user', async ({ page }) => {
+    // Navigate to user management
+    await page.click('[data-testid="nav-users"]');
+    
+    // Find and edit user
+    await page.click('[data-testid="edit-user-button"]');
+    
+    // Update user data
+    await page.fill('[data-testid="user-email"]', 'updated@example.com');
+    await page.selectOption('[data-testid="user-role"]', 'ADMIN');
+    
+    // Save changes
+    await page.click('[data-testid="save-button"]');
+    
+    // Verify success message
+    await expect(page.locator('[data-testid="success-message"]')).toBeVisible();
+    await expect(page.locator('[data-testid="success-message"]')).toContainText('User updated successfully');
+  });
+
+  test('should delete user', async ({ page }) => {
+    // Navigate to user management
+    await page.click('[data-testid="nav-users"]');
+    
+    // Find and delete user
+    await page.click('[data-testid="delete-user-button"]');
+    
+    // Confirm deletion
+    await page.click('[data-testid="confirm-delete-button"]');
+    
+    // Verify success message
+    await expect(page.locator('[data-testid="success-message"]')).toBeVisible();
+    await expect(page.locator('[data-testid="success-message"]')).toContainText('User deleted successfully');
+  });
+});
+```
+
+## 📊 **Performance Testing**
+
+### **Load Testing mit Artillery**
+```yaml
+# ✅ Artillery Load Test Configuration
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 50
+      name: "Sustained load"
+    - duration: 60
+      arrivalRate: 100
+      name: "Peak load"
+    - duration: 60
+      arrivalRate: 10
+      name: "Cool down"
+  defaults:
+    headers:
+      Authorization: 'Bearer {{ $randomString() }}'
+
+scenarios:
+  - name: "User API Load Test"
+    weight: 70
+    flow:
+      - get:
+          url: "/api/users"
+          expect:
+            - statusCode: 200
+            - responseTime: 1000
+      - think: 1
+      - post:
+          url: "/api/users"
+          json:
+            email: "{{ $randomEmail() }}"
+            password: "password123"
+            role: "USER"
+          expect:
+            - statusCode: 201
+            - responseTime: 2000
+
+  - name: "Authentication Load Test"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ $randomEmail() }}"
+            password: "password123"
+          expect:
+            - statusCode: 401
+            - responseTime: 1000
+```
+
+### **Performance Monitoring**
+```typescript
+// ✅ Performance Test Utilities
+export class PerformanceTester {
+  async measureResponseTime(url: string, iterations: number = 100): Promise<PerformanceMetrics> {
+    const responseTimes: number[] = [];
+    const errors: Error[] = [];
+
+    for (let i = 0; i < iterations; i++) {
+      const startTime = performance.now();
+      
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          errors.push(new Error(`HTTP ${response.status}: ${response.statusText}`));
+        }
+      } catch (error) {
+        errors.push(error as Error);
+      }
+      
+      const endTime = performance.now();
+      responseTimes.push(endTime - startTime);
+    }
+
+    const sortedTimes = responseTimes.sort((a, b) => a - b);
+    
+    return {
+      url,
+      iterations,
+      averageResponseTime: responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length,
+      medianResponseTime: sortedTimes[Math.floor(sortedTimes.length / 2)],
+      p95ResponseTime: sortedTimes[Math.floor(sortedTimes.length * 0.95)],
+      p99ResponseTime: sortedTimes[Math.floor(sortedTimes.length * 0.99)],
+      minResponseTime: Math.min(...responseTimes),
+      maxResponseTime: Math.max(...responseTimes),
+      errorRate: errors.length / iterations,
+      errors: errors
+    };
+  }
+
+  async benchmarkDatabaseQueries(): Promise<DatabasePerformanceMetrics> {
+    const metrics: DatabasePerformanceMetrics = {
+      simpleQuery: await this.measureQueryTime('SELECT * FROM users LIMIT 1'),
+      complexQuery: await this.measureQueryTime('SELECT u.*, COUNT(e.id) as eventCount FROM users u LEFT JOIN events e ON u.id = e.userId GROUP BY u.id'),
+      insertQuery: await this.measureQueryTime('INSERT INTO users (email, password, role) VALUES ($1, $2, $3)'),
+      updateQuery: await this.measureQueryTime('UPDATE users SET updatedAt = NOW() WHERE id = $1'),
+      deleteQuery: await this.measureQueryTime('DELETE FROM users WHERE id = $1')
+    };
+
+    return metrics;
+  }
+}
+```
+
+## 🔒 **Security Testing**
+
+### **OWASP ZAP Security Tests**
+```typescript
+// ✅ Security Test Suite
+export class SecurityTester {
+  async runSecurityScan(targetUrl: string): Promise<SecurityScanResult> {
+    const vulnerabilities: Vulnerability[] = [];
+    
+    // SQL Injection Tests
+    const sqlInjectionResults = await this.testSQLInjection(targetUrl);
+    vulnerabilities.push(...sqlInjectionResults);
+    
+    // XSS Tests
+    const xssResults = await this.testXSS(targetUrl);
+    vulnerabilities.push(...xssResults);
+    
+    // CSRF Tests
+    const csrfResults = await this.testCSRF(targetUrl);
+    vulnerabilities.push(...csrfResults);
+    
+    // Authentication Tests
+    const authResults = await this.testAuthentication(targetUrl);
+    vulnerabilities.push(...authResults);
+    
+    return {
+      targetUrl,
+      scanDate: new Date(),
+      vulnerabilities,
+      riskLevel: this.calculateRiskLevel(vulnerabilities),
+      recommendations: this.generateSecurityRecommendations(vulnerabilities)
+    };
+  }
+
+  private async testSQLInjection(url: string): Promise<Vulnerability[]> {
+    const vulnerabilities: Vulnerability[] = [];
+    const payloads = [
+      "' OR '1'='1",
+      "'; DROP TABLE users; --",
+      "' UNION SELECT * FROM users --",
+      "admin'--",
+      "1' OR '1' = '1' --"
+    ];
+
+    for (const payload of payloads) {
+      try {
+        const response = await fetch(`${url}/api/users?email=${encodeURIComponent(payload)}`);
+        const body = await response.text();
+        
+        if (this.detectSQLInjectionResponse(body)) {
+          vulnerabilities.push({
+            type: 'SQL_INJECTION',
+            severity: 'HIGH',
+            description: `SQL injection vulnerability detected with payload: ${payload}`,
+            url: `${url}/api/users?email=${encodeURIComponent(payload)}`,
+            payload,
+            response: body.substring(0, 200) + '...'
+          });
+        }
+      } catch (error) {
+        // Log error but continue testing
+        console.error(`Error testing SQL injection with payload ${payload}:`, error);
+      }
+    }
+
+    return vulnerabilities;
+  }
+}
+```
+
+## 📈 **Test Coverage & Quality**
+
+### **Coverage Reporting**
+```typescript
+// ✅ Coverage Configuration
+export class CoverageReporter {
+  async generateCoverageReport(): Promise<CoverageReport> {
+    const coverage = await this.collectCoverageData();
+    
+    return {
+      overall: this.calculateOverallCoverage(coverage),
+      byFile: this.calculateFileCoverage(coverage),
+      byFunction: this.calculateFunctionCoverage(coverage),
+      byLine: this.calculateLineCoverage(coverage),
+      uncovered: this.identifyUncoveredCode(coverage),
+      recommendations: this.generateCoverageRecommendations(coverage)
+    };
+  }
+
+  private calculateOverallCoverage(coverage: any): CoverageMetrics {
+    const total = coverage.total;
+    const covered = coverage.covered;
+    
+    return {
+      statements: (covered.statements / total.statements) * 100,
+      branches: (covered.branches / total.branches) * 100,
+      functions: (covered.functions / total.functions) * 100,
+      lines: (covered.lines / total.lines) * 100
+    };
+  }
+
+  private generateCoverageRecommendations(coverage: any): string[] {
+    const recommendations: string[] = [];
+    
+    if (coverage.overall.statements < 80) {
+      recommendations.push('Increase statement coverage to at least 80%');
+    }
+    
+    if (coverage.overall.branches < 70) {
+      recommendations.push('Add more branch coverage tests for conditional logic');
+    }
+    
+    if (coverage.overall.functions < 90) {
+      recommendations.push('Ensure all functions have corresponding tests');
+    }
+    
+    return recommendations;
+  }
+}
+```
+
+## 🚫 **Testing-Verbote**
+
+### **Test-Qualität**
+```typescript
+// ❌ NICHT erlaubt
+- Tests ohne Assertions
+- Tests die von der Reihenfolge abhängen
+- Tests die externe Services aufrufen
+- Tests ohne Cleanup
+
+// ✅ Erlaubt
+- Vollständige Test-Coverage
+- Isolierte Tests mit Mocks
+- Deterministische Tests
+- Automatische Cleanup-Routinen
+```
+
+### **Performance**
+```typescript
+// ❌ NICHT erlaubt
+- Tests die länger als 5 Sekunden dauern
+- Tests die zu viel Speicher verbrauchen
+- Tests die das System überlasten
+
+// ✅ Erlaubt
+- Schnelle Unit-Tests (< 100ms)
+- Effiziente Integration-Tests (< 1s)
+- Kontrollierte Load-Tests
+- Ressourcen-Monitoring
+```
+
+## ✅ **Testing-Erfordernisse**
+
+### **Coverage**
+- Mindest-Coverage: 80% Statements, 70% Branches
+- Alle kritischen Pfade getestet
+- Edge Cases abgedeckt
+- Error Handling getestet
+
+### **Performance**
+- Unit-Tests: < 100ms
+- Integration-Tests: < 1s
+- E2E-Tests: < 10s
+- Load-Tests: < 5 Minuten
+
+### **Qualität**
+- Tests sind deterministisch
+- Tests sind isoliert
+- Tests sind wartbar
+- Tests sind aussagekräftig
+
+### **Sicherheit**
+- OWASP Top 10 abgedeckt
+- Authentifizierung getestet
+- Autorisierung getestet
+- Input-Validierung getestet
+description:
+globs:
+alwaysApply: false
+---
