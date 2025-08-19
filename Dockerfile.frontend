@@ -1,0 +1,27 @@
+# Frontend Development Server Dockerfile
+FROM node:18-alpine
+
+# Arbeitsverzeichnis setzen
+WORKDIR /app
+
+# System-Abhängigkeiten installieren
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git
+
+# Package.json und Package-lock.json kopieren
+COPY package*.json ./
+
+# Alle Abhängigkeiten installieren (inkl. devDependencies)
+RUN npm ci
+
+# Quellcode kopieren
+COPY . .
+
+# Port exponieren
+EXPOSE 3000
+
+# Anwendung starten
+CMD ["npm", "start"]

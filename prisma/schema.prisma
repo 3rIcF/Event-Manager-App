@@ -1,0 +1,595 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// CORE SCHEMA - USERS & AUTHENTICATION
+// ========================================
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  passwordHash  String   @map("password_hash")
+  firstName     String   @map("first_name")
+  lastName      String   @map("last_name")
+  phone         String?
+  avatarUrl     String?  @map("avatar_url")
+  timezone      String   @default("UTC")
+  language      String   @default("de")
+  isActive      Boolean  @default(true) @map("is_active")
+  isVerified    Boolean  @default(false) @map("is_verified")
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  roleId        String?  @map("role_id")
+  role          UserRole? @relation(fields: [roleId], references: [id])
+  
+  // Project relations
+  managedProjects Project[] @relation("ProjectManager")
+  projectMembers ProjectMember[]
+  assignedTasks Task[] @relation("TaskAssignee")
+  createdTasks Task[] @relation("TaskCreator")
+  taskComments TaskComment[]
+  uploadedFiles File[]
+  userPermissions UserPermission[]
+  grantedPermissions UserPermission[] @relation("PermissionGranter")
+  userSessions UserSession[]
+  
+  // Audit
+  auditLogs    AuditLog[]
+  systemLogs   SystemLog[]
+
+  @@map("users")
+}
+
+model UserRole {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String?
+  permissions  Json     @default("{}")
+  isSystemRole Boolean  @default(false) @map("is_system_role")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  users        User[]
+  userPermissions UserPermission[]
+
+  @@map("user_roles")
+}
+
+model UserPermission {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  roleId       String   @map("role_id")
+  resourceType String   @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  permissions  Json     @default("{}")
+  grantedBy    String?  @map("granted_by")
+  grantedAt    DateTime @default(now()) @map("granted_at")
+  expiresAt    DateTime? @map("expires_at")
+
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         UserRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  granter      User?    @relation("PermissionGranter", fields: [grantedBy], references: [id])
+
+  @@unique([userId, resourceType, resourceId])
+  @@map("user_permissions")
+}
+
+model UserSession {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  sessionToken    String   @unique @map("session_token")
+  refreshToken    String   @unique @map("refresh_token")
+  ipAddress       String?  @map("ip_address")
+  userAgent       String?  @map("user_agent")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  expiresAt       DateTime @map("expires_at")
+  lastActivityAt  DateTime @default(now()) @map("last_activity_at")
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+// ========================================
+// BUSINESS SCHEMA - ORGANIZATIONS & CLIENTS
+// ========================================
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  logoUrl      String?  @map("logo_url")
+  website      String?
+  industry     String?
+  size         String?
+  foundedYear  Int?     @map("founded_year")
+  address      Json?
+  contactInfo  Json?    @map("contact_info")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  clients      Client[]
+  projects     Project[]
+
+  @@map("organizations")
+}
+
+model Client {
+  id             String   @id @default(cuid())
+  organizationId String?  @map("organization_id")
+  name           String
+  contactPerson  String?  @map("contact_person")
+  email          String?
+  phone          String?
+  address        Json?
+  billingInfo    Json?    @map("billing_info")
+  notes          String?
+  status         String   @default("active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  projects       Project[]
+
+  @@map("clients")
+}
+
+// ========================================
+// BUSINESS SCHEMA - PROJECTS & EVENTS
+// ========================================
+
+model Project {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  status         String   @default("PLANNING")
+  priority       String   @default("MEDIUM")
+  startDate      DateTime? @map("start_date")
+  endDate        DateTime? @map("end_date")
+  budget         Decimal? @db.Decimal(15, 2)
+  actualCost     Decimal? @map("actual_cost") @db.Decimal(15, 2)
+  managerId      String   @map("manager_id")
+  clientId       String?  @map("client_id")
+  organizationId String?  @map("organization_id")
+  tags           String[]
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  manager        User     @relation("ProjectManager", fields: [managerId], references: [id])
+  client         Client?  @relation(fields: [clientId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  projectMembers ProjectMember[]
+  projectPhases  ProjectPhase[]
+  bomItems       BOMItem[]
+  permits        Permit[]
+  logistics      Logistic[]
+  tasks          Task[]
+  files          File[]
+  kanbanBoards   KanbanBoard[]
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id           String   @id @default(cuid())
+  projectId    String   @map("project_id")
+  userId       String   @map("user_id")
+  role         String
+  permissions  Json     @default("{}")
+  joinedAt     DateTime @default(now()) @map("joined_at")
+  leftAt       DateTime? @map("left_at")
+  isActive     Boolean  @default(true) @map("is_active")
+
+  // Relations
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model ProjectPhase {
+  id                 String   @id @default(cuid())
+  projectId          String   @map("project_id")
+  name               String
+  description        String?
+  orderIndex         Int      @map("order_index")
+  status             String   @default("PENDING")
+  startDate          DateTime? @map("start_date")
+  endDate            DateTime? @map("end_date")
+  progressPercentage Int      @default(0) @map("progress_percentage")
+  dependencies       Json     @default("[]")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_phases")
+}
+
+// ========================================
+// BUSINESS SCHEMA - BOM & MATERIALS
+// ========================================
+
+model BOMItem {
+  id           String   @id @default(cuid())
+  projectId    String   @map("project_id")
+  parentId     String?  @map("parent_id")
+  name         String
+  description  String?
+  sku          String?
+  category     String?
+  quantity     Decimal  @db.Decimal(10, 3)
+  unit         String
+  unitPrice    Decimal? @map("unit_price") @db.Decimal(15, 2)
+  totalPrice   Decimal? @map("total_price") @db.Decimal(15, 2)
+  supplierId   String?  @map("supplier_id")
+  status       String   @default("PLANNED")
+  priority     String   @default("MEDIUM")
+  deliveryDate DateTime? @map("delivery_date")
+  notes        String?
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent       BOMItem? @relation("BOMItemHierarchy", fields: [parentId], references: [id])
+  children     BOMItem[] @relation("BOMItemHierarchy")
+  supplier     Supplier? @relation(fields: [supplierId], references: [id])
+
+  @@map("bom_items")
+}
+
+model Supplier {
+  id                 String   @id @default(cuid())
+  name               String
+  contactPerson      String?  @map("contact_person")
+  email              String?
+  phone              String?
+  website            String?
+  address            Json?
+  taxId              String?  @map("tax_id")
+  paymentTerms       String?  @map("payment_terms")
+  rating             Decimal? @db.Decimal(3, 2)
+  category           String?
+  specialties        String[]
+  certifications     String[]
+  performanceMetrics Json     @default("{}") @map("performance_metrics")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  bomItems           BOMItem[]
+  supplierContracts  SupplierContract[]
+
+  @@map("suppliers")
+}
+
+model SupplierContract {
+  id             String   @id @default(cuid())
+  supplierId     String   @map("supplier_id")
+  projectId      String?  @map("project_id")
+  contractNumber String   @unique @map("contract_number")
+  contractType   String   @map("contract_type")
+  startDate      DateTime @map("start_date")
+  endDate        DateTime? @map("end_date")
+  totalValue     Decimal? @map("total_value") @db.Decimal(15, 2)
+  paymentTerms   String?  @map("payment_terms")
+  termsConditions String? @map("terms_conditions")
+  status         String   @default("ACTIVE")
+  documents      Json     @default("[]")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  supplier       Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  project        Project? @relation(fields: [projectId], references: [id])
+
+  @@map("supplier_contracts")
+}
+
+// ========================================
+// BUSINESS SCHEMA - PERMITS & LOGISTICS
+// ========================================
+
+model Permit {
+  id               String   @id @default(cuid())
+  projectId        String   @map("project_id")
+  name             String
+  description      String?
+  type             String
+  category         String?
+  status           String   @default("PENDING")
+  priority         String   @default("MEDIUM")
+  applicationDate  DateTime? @map("application_date")
+  submissionDate   DateTime? @map("submission_date")
+  approvalDate     DateTime? @map("approval_date")
+  expiryDate       DateTime? @map("expiry_date")
+  cost             Decimal? @db.Decimal(15, 2)
+  issuingAuthority String?  @map("issuing_authority")
+  referenceNumber  String?  @map("reference_number")
+  requirements     String[]
+  documents        Json     @default("[]")
+  notes            String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("permits")
+}
+
+model Logistic {
+  id                   String   @id @default(cuid())
+  projectId            String   @map("project_id")
+  type                 String
+  name                 String
+  description          String?
+  fromLocation         Json?    @map("from_location")
+  toLocation           Json?    @map("to_location")
+  scheduledDate        DateTime? @map("scheduled_date")
+  actualDate           DateTime? @map("actual_date")
+  status               String   @default("PLANNED")
+  priority             String   @default("MEDIUM")
+  cost                 Decimal? @db.Decimal(15, 2)
+  carrier              String?
+  trackingNumber       String?  @map("tracking_number")
+  specialRequirements  String[] @map("special_requirements")
+  documents            Json     @default("[]")
+  notes                String?
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  project              Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("logistics")
+}
+
+// ========================================
+// BUSINESS SCHEMA - TASKS & WORKFLOWS
+// ========================================
+
+model Task {
+  id                 String   @id @default(cuid())
+  projectId          String   @map("project_id")
+  parentTaskId       String?  @map("parent_task_id")
+  title              String
+  description        String?
+  status             String   @default("TODO")
+  priority           String   @default("MEDIUM")
+  type               String?
+  assignedTo         String?  @map("assigned_to")
+  createdBy          String   @map("created_by")
+  dueDate            DateTime? @map("due_date")
+  estimatedHours     Decimal? @map("estimated_hours") @db.Decimal(5, 2)
+  actualHours        Decimal? @map("actual_hours") @db.Decimal(5, 2)
+  progressPercentage Int      @default(0) @map("progress_percentage")
+  dependencies       Json     @default("[]")
+  tags               String[]
+  attachments        Json     @default("[]")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parentTask         Task?    @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
+  subtasks           Task[]   @relation("TaskHierarchy")
+  assignee           User?    @relation("TaskAssignee", fields: [assignedTo], references: [id])
+  creator            User     @relation("TaskCreator", fields: [createdBy], references: [id])
+  taskComments       TaskComment[]
+  taskAttachments    TaskAttachment[]
+
+  @@map("tasks")
+}
+
+model TaskComment {
+  id               String   @id @default(cuid())
+  taskId           String   @map("task_id")
+  userId           String   @map("user_id")
+  content          String
+  parentCommentId  String?  @map("parent_comment_id")
+  isInternal       Boolean  @default(false) @map("is_internal")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  task             Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentComment    TaskComment? @relation("CommentHierarchy", fields: [parentCommentId], references: [id])
+  childComments    TaskComment[] @relation("CommentHierarchy")
+
+  @@map("task_comments")
+}
+
+model TaskAttachment {
+  id          String   @id @default(cuid())
+  taskId      String   @map("task_id")
+  fileId      String   @map("file_id")
+  uploadedBy  String   @map("uploaded_by")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  file        File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  uploader    User     @relation(fields: [uploadedBy], references: [id])
+
+  @@map("task_attachments")
+}
+
+// ========================================
+// WORKFLOW SCHEMA - KANBAN & WORKFLOWS
+// ========================================
+
+model KanbanBoard {
+  id           String   @id @default(cuid())
+  projectId    String   @map("project_id")
+  name         String
+  description  String?
+  boardType    String   @default("TASK") @map("board_type")
+  settings     Json     @default("{}")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  columns      KanbanColumn[]
+
+  @@map("kanban_boards")
+}
+
+model KanbanColumn {
+  id           String   @id @default(cuid())
+  boardId      String   @map("board_id")
+  name         String
+  description  String?
+  orderIndex   Int      @map("order_index")
+  color        String?
+  wipLimit     Int?     @map("wip_limit")
+  settings     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  board        KanbanBoard @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards        KanbanCard[]
+
+  @@map("kanban_columns")
+}
+
+model KanbanCard {
+  id           String   @id @default(cuid())
+  columnId     String   @map("column_id")
+  title        String
+  description  String?
+  content      Json     @default("{}")
+  assignedTo   String?  @map("assigned_to")
+  priority     String   @default("MEDIUM")
+  dueDate      DateTime? @map("due_date")
+  orderIndex   Int      @map("order_index")
+  size         String?
+  tags         String[]
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  column       KanbanColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  assignee     User?    @relation(fields: [assignedTo], references: [id])
+
+  @@map("kanban_cards")
+}
+
+// ========================================
+// FILE MANAGEMENT SCHEMA
+// ========================================
+
+model File {
+  id             String   @id @default(cuid())
+  projectId      String?  @map("project_id")
+  name           String
+  originalName   String   @map("original_name")
+  filePath       String   @map("file_path")
+  fileSize       BigInt   @map("file_size")
+  mimeType       String?  @map("mime_type")
+  extension      String?
+  category       String?
+  tags           String[]
+  metadata       Json     @default("{}")
+  uploadedBy     String   @map("uploaded_by")
+  isPublic       Boolean  @default(false) @map("is_public")
+  downloadCount  Int      @default(0) @map("download_count")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  project        Project? @relation(fields: [projectId], references: [id])
+  uploader       User     @relation(fields: [uploadedBy], references: [id])
+  fileVersions   FileVersion[]
+  taskAttachments TaskAttachment[]
+
+  @@map("files")
+}
+
+model FileVersion {
+  id                String   @id @default(cuid())
+  fileId            String   @map("file_id")
+  versionNumber     Int      @map("version_number")
+  filePath          String   @map("file_path")
+  fileSize          BigInt   @map("file_size")
+  changeDescription String?  @map("change_description")
+  uploadedBy        String   @map("uploaded_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  // Relations
+  file             File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, versionNumber])
+  @@map("file_versions")
+}
+
+// ========================================
+// AUDIT & LOGGING SCHEMA
+// ========================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  tableName  String   @map("table_name")
+  recordId   String   @map("record_id")
+  action     String
+  oldValues  Json?
+  newValues  Json?
+  userId     String?  @map("user_id")
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  timestamp  DateTime @default(now())
+
+  // Relations
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  level     String
+  message   String
+  context   Json     @default("{}")
+  userId    String?  @map("user_id")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("system_logs")
+}
