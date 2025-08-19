@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
-import { useApp } from './AppContext';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Calendar, MapPin, Users, ArrowRight, Check, Building } from 'lucide-react';
+import { Calendar, MapPin, Users, ArrowRight, Check } from 'lucide-react';
 
-interface ProjectWizardProps {
+interface EventWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
-  const { addProject } = useApp();
+export function EventWizard({ open, onOpenChange }: EventWizardProps) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
@@ -25,8 +23,7 @@ export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
     address: '',
     eventType: '',
     expectedAttendees: '',
-    budget: '',
-    responsible: ''
+    budget: ''
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -46,19 +43,8 @@ export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
   };
 
   const handleSubmit = () => {
-    const project = {
-      id: Date.now().toString(),
-      name: formData.name,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      location: formData.location,
-      status: 'idea' as const,
-      responsible: formData.responsible,
-      description: formData.description,
-      budget: formData.budget ? parseInt(formData.budget) : undefined
-    };
-
-    addProject(project);
+    // Event erstellen
+    // Event erstellt: ${formData.name}
     onOpenChange(false);
     setStep(1);
     setFormData({
@@ -70,8 +56,7 @@ export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
       address: '',
       eventType: '',
       expectedAttendees: '',
-      budget: '',
-      responsible: ''
+      budget: ''
     });
   };
 
@@ -82,7 +67,7 @@ export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
       case 2:
         return formData.startDate && formData.endDate && formData.location;
       case 3:
-        return formData.responsible && formData.expectedAttendees;
+        return formData.expectedAttendees && formData.budget;
       default:
         return false;
     }
@@ -92,41 +77,39 @@ export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Neues Projekt anlegen</DialogTitle>
-          <DialogDescription>
-            <div className="flex items-center justify-between mt-4">
-              {[1, 2, 3].map((stepNumber) => (
-                <div key={stepNumber} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    step === stepNumber 
-                      ? 'bg-primary text-primary-foreground' 
-                      : step > stepNumber 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-muted text-muted-foreground'
-                  }`}>
-                    {step > stepNumber ? <Check className="w-4 h-4" /> : stepNumber}
-                  </div>
-                  {stepNumber < 3 && (
-                    <div className={`w-16 h-0.5 mx-2 ${
-                      step > stepNumber ? 'bg-green-500' : 'bg-muted'
-                    }`} />
-                  )}
+          <DialogTitle>Neues Event anlegen</DialogTitle>
+          <div className="flex items-center justify-between mt-4">
+            {[1, 2, 3].map((stepNumber) => (
+              <div key={stepNumber} className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  step === stepNumber 
+                    ? 'bg-primary text-primary-foreground' 
+                    : step > stepNumber 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {step > stepNumber ? <Check className="w-4 h-4" /> : stepNumber}
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-between text-sm text-muted-foreground mt-2">
-              <span>Grunddaten</span>
-              <span>Zeit & Ort</span>
-              <span>Details</span>
-            </div>
-          </DialogDescription>
+                {stepNumber < 3 && (
+                  <div className={`w-16 h-0.5 mx-2 ${
+                    step > stepNumber ? 'bg-green-500' : 'bg-muted'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between text-sm text-muted-foreground mt-2">
+            <span>Grunddaten</span>
+            <span>Zeit & Ort</span>
+            <span>Details</span>
+          </div>
         </DialogHeader>
 
         <div className="mt-6 space-y-4">
           {step === 1 && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="name">Projekt Name *</Label>
+                <Label htmlFor="name">Event Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -214,16 +197,6 @@ export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
           {step === 3 && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="responsible">Projektverantwortlicher *</Label>
-                <Input
-                  id="responsible"
-                  value={formData.responsible}
-                  onChange={(e) => handleInputChange('responsible', e.target.value)}
-                  placeholder="z.B. Max Müller"
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="expectedAttendees">Erwartete Teilnehmerzahl *</Label>
                 <Select value={formData.expectedAttendees} onValueChange={(value) => handleInputChange('expectedAttendees', value)}>
                   <SelectTrigger>
@@ -239,7 +212,7 @@ export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="budget">Geschätztes Budget (EUR)</Label>
+                <Label htmlFor="budget">Geschätztes Budget (EUR) *</Label>
                 <Input
                   id="budget"
                   type="number"
@@ -256,7 +229,6 @@ export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
                   <li>• Genehmigungsverfahren und Anträge</li>
                   <li>• Initiale To-Do-Liste</li>
                   <li>• Grundlegende BOM-Struktur</li>
-                  <li>• Stammdaten-Verknüpfungen</li>
                 </ul>
               </div>
             </>
@@ -286,8 +258,7 @@ export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
                 onClick={handleSubmit}
                 disabled={!isStepValid(step)}
               >
-                <Building className="w-4 h-4 mr-2" />
-                Projekt erstellen
+                Event erstellen
               </Button>
             )}
           </div>

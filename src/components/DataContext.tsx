@@ -286,7 +286,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // Update global material usage
     setGlobalMaterials(prev => prev.map(gm => 
       gm.id === material.globalMaterialId 
-        ? { ...gm, usedInProjects: [...new Set([...gm.usedInProjects, projectId])] }
+        ? { ...gm, usedInProjects: Array.from(new Set([...gm.usedInProjects, projectId])) }
         : gm
     ));
   };

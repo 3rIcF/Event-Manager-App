@@ -149,8 +149,8 @@ export function BOMView() {
     }
   };
 
-  const categories = [...new Set(mockBOMItems.map(item => item.category))];
-  const phases = [...new Set(mockBOMItems.map(item => item.phase))];
+  const categories = Array.from(new Set(mockBOMItems.map(item => item.category)));
+  const phases = Array.from(new Set(mockBOMItems.map(item => item.phase)));
 
   const getCategoryStats = (category: string) => {
     const items = mockBOMItems.filter(item => item.category === category);
