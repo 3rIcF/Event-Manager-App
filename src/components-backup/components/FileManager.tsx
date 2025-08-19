@@ -197,7 +197,7 @@ export function FileManager() {
 
   const handleTemplateUpdate = (file: FileItem) => {
     // Mock implementation - would update project file with new template version
-    console.log('Updating template for file:', file.id);
+    // Template-Update für Datei (Debug): file.id
   };
 
   const renderFileList = () => (

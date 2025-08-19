@@ -326,7 +326,7 @@ export function BOMHierarchy({ projectId }: BOMHierarchyProps) {
                       variant="ghost" 
                       size="sm" 
                       className="p-0 h-4 w-4"
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         toggleExpand(item.id);
                       }}

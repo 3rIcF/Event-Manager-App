@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { useApp } from './AppContext';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Calendar, MapPin, Users, ArrowRight, Check } from 'lucide-react';
+import { Calendar, MapPin, Users, ArrowRight, Check, Building } from 'lucide-react';
 
-interface EventWizardProps {
+interface ProjectWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function EventWizard({ open, onOpenChange }: EventWizardProps) {
+export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
+  const { addProject } = useApp();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
@@ -23,7 +25,8 @@ export function EventWizard({ open, onOpenChange }: EventWizardProps) {
     address: '',
     eventType: '',
     expectedAttendees: '',
-    budget: ''
+    budget: '',
+    responsible: ''
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -43,8 +46,27 @@ export function EventWizard({ open, onOpenChange }: EventWizardProps) {
   };
 
   const handleSubmit = () => {
-    // Event erstellen
-    console.log('Event erstellt:', formData);
+    // Validiere und parse Budget sicher
+    let parsedBudget: number | undefined;
+    if (formData.budget) {
+      const cleanBudget = formData.budget.replace(/[^\d.,]/g, '').replace(',', '.');
+      const numBudget = parseFloat(cleanBudget);
+      parsedBudget = !isNaN(numBudget) && numBudget >= 0 ? numBudget : undefined;
+    }
+
+    const project = {
+      id: Date.now().toString(),
+      name: formData.name,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      location: formData.location,
+      status: 'idea' as const,
+      responsible: formData.responsible,
+      description: formData.description,
+      budget: parsedBudget
+    };
+
+    addProject(project);
     onOpenChange(false);
     setStep(1);
     setFormData({
@@ -56,7 +78,8 @@ export function EventWizard({ open, onOpenChange }: EventWizardProps) {
       address: '',
       eventType: '',
       expectedAttendees: '',
-      budget: ''
+      budget: '',
+      responsible: ''
     });
   };
 
@@ -67,7 +90,7 @@ export function EventWizard({ open, onOpenChange }: EventWizardProps) {
       case 2:
         return formData.startDate && formData.endDate && formData.location;
       case 3:
-        return formData.expectedAttendees && formData.budget;
+        return formData.responsible && formData.expectedAttendees;
       default:
         return false;
     }
@@ -77,39 +100,41 @@ export function EventWizard({ open, onOpenChange }: EventWizardProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Neues Event anlegen</DialogTitle>
-          <div className="flex items-center justify-between mt-4">
-            {[1, 2, 3].map((stepNumber) => (
-              <div key={stepNumber} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step === stepNumber 
-                    ? 'bg-primary text-primary-foreground' 
-                    : step > stepNumber 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-muted text-muted-foreground'
-                }`}>
-                  {step > stepNumber ? <Check className="w-4 h-4" /> : stepNumber}
+          <DialogTitle>Neues Projekt anlegen</DialogTitle>
+          <DialogDescription>
+            <div className="flex items-center justify-between mt-4">
+              {[1, 2, 3].map((stepNumber) => (
+                <div key={stepNumber} className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    step === stepNumber 
+                      ? 'bg-primary text-primary-foreground' 
+                      : step > stepNumber 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {step > stepNumber ? <Check className="w-4 h-4" /> : stepNumber}
+                  </div>
+                  {stepNumber < 3 && (
+                    <div className={`w-16 h-0.5 mx-2 ${
+                      step > stepNumber ? 'bg-green-500' : 'bg-muted'
+                    }`} />
+                  )}
                 </div>
-                {stepNumber < 3 && (
-                  <div className={`w-16 h-0.5 mx-2 ${
-                    step > stepNumber ? 'bg-green-500' : 'bg-muted'
-                  }`} />
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between text-sm text-muted-foreground mt-2">
-            <span>Grunddaten</span>
-            <span>Zeit & Ort</span>
-            <span>Details</span>
-          </div>
+              ))}
+            </div>
+            <div className="flex justify-between text-sm text-muted-foreground mt-2">
+              <span>Grunddaten</span>
+              <span>Zeit & Ort</span>
+              <span>Details</span>
+            </div>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="mt-6 space-y-4">
           {step === 1 && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="name">Event Name *</Label>
+                <Label htmlFor="name">Projekt Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -120,7 +145,7 @@ export function EventWizard({ open, onOpenChange }: EventWizardProps) {
               
               <div className="space-y-2">
                 <Label htmlFor="eventType">Event Typ *</Label>
-                <Select value={formData.eventType} onValueChange={(value) => handleInputChange('eventType', value)}>
+                <Select value={formData.eventType} onValueChange={(value: string) => handleInputChange('eventType', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Event Typ auswählen" />
                   </SelectTrigger>
@@ -197,8 +222,18 @@ export function EventWizard({ open, onOpenChange }: EventWizardProps) {
           {step === 3 && (
             <>
               <div className="space-y-2">
+                <Label htmlFor="responsible">Projektverantwortlicher *</Label>
+                <Input
+                  id="responsible"
+                  value={formData.responsible}
+                  onChange={(e) => handleInputChange('responsible', e.target.value)}
+                  placeholder="z.B. Max Müller"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="expectedAttendees">Erwartete Teilnehmerzahl *</Label>
-                <Select value={formData.expectedAttendees} onValueChange={(value) => handleInputChange('expectedAttendees', value)}>
+                <Select value={formData.expectedAttendees} onValueChange={(value: string) => handleInputChange('expectedAttendees', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Größenordnung auswählen" />
                   </SelectTrigger>
@@ -212,7 +247,7 @@ export function EventWizard({ open, onOpenChange }: EventWizardProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="budget">Geschätztes Budget (EUR) *</Label>
+                <Label htmlFor="budget">Geschätztes Budget (EUR)</Label>
                 <Input
                   id="budget"
                   type="number"
@@ -229,6 +264,7 @@ export function EventWizard({ open, onOpenChange }: EventWizardProps) {
                   <li>• Genehmigungsverfahren und Anträge</li>
                   <li>• Initiale To-Do-Liste</li>
                   <li>• Grundlegende BOM-Struktur</li>
+                  <li>• Stammdaten-Verknüpfungen</li>
                 </ul>
               </div>
             </>
@@ -258,7 +294,8 @@ export function EventWizard({ open, onOpenChange }: EventWizardProps) {
                 onClick={handleSubmit}
                 disabled={!isStepValid(step)}
               >
-                Event erstellen
+                <Building className="w-4 h-4 mr-2" />
+                Projekt erstellen
               </Button>
             )}
           </div>
