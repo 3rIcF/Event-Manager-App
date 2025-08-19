@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { AppProvider, useApp } from './components/AppContext';
+import { AuthProvider } from './src/contexts/AuthContext';
+import { AuthWrapper } from './src/components/auth/AuthWrapper';
 import { NewLayout } from './components/NewLayout';
 import { GlobalDashboard } from './components/GlobalDashboard';
 import { ProjectsList } from './components/ProjectsList';
@@ -115,8 +117,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <AuthWrapper>
+          <AppContent />
+        </AuthWrapper>
+      </AppProvider>
+    </AuthProvider>
   );
 }

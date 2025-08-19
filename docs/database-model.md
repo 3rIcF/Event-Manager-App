@@ -1,588 +1,846 @@
-# Datenbank-Modell
-## Event Manager Application
+# 🗄️ Event Manager App - Datenbankmodell & Schema-Design
 
-**Dokumentenversion:** 2.0 (Supabase-ready)  
-**Erstellt am:** Dezember 2024  
-**Status:** Vollständiges Datenbankmodell für Supabase-Deployment  
+## 📋 **Übersicht**
 
----
+Das Datenbankmodell der Event Manager App basiert auf PostgreSQL 15+ und implementiert eine relationale Datenbankarchitektur mit erweiterten Features wie JSONB, UUIDs und optimierten Indizes für maximale Performance und Skalierbarkeit.
 
-## 🏗️ **Architektur-Übersicht**
+## 🎯 **Datenbank-Design-Prinzipien**
 
-### **Supabase PostgreSQL**
-- **Managed Service** mit automatischen Backups
-- **Row Level Security (RLS)** für Datenschutz
-- **Real-time Subscriptions** für Live-Updates
-- **Edge Functions** für Serverless-Logik
-- **Automatische Skalierung** basierend auf Last
+### **Normalisierung**
+- **3NF (Third Normal Form)**: Vermeidung von Transitive Dependencies
+- **Denormalisierung**: Strategische Denormalisierung für Performance
+- **JSONB**: Flexible Datenstrukturen für dynamische Inhalte
 
-### **Datenbank-Schema**
-Das vollständige Schema wird durch Prisma verwaltet und befindet sich in:
-```
-apps/api/prisma/schema.prisma
-```
+### **Performance-Optimierung**
+- **Composite Indexes**: Optimierte Indizes für häufige Query-Patterns
+- **Partitioning**: Zeitbasierte Partitionierung für große Tabellen
+- **Connection Pooling**: Effiziente Datenbankverbindungen
+- **Read Replicas**: Horizontale Skalierung für Leseoperationen
 
----
+### **Sicherheit & Compliance**
+- **Audit Logging**: Vollständige Nachverfolgung aller Änderungen
+- **Row Level Security (RLS)**: Granulare Zugriffskontrolle
+- **Data Encryption**: Verschlüsselung sensibler Daten
+- **GDPR Compliance**: Datenschutz-konforme Implementierung
 
-## 🗄️ **Vollständiges Prisma Schema**
+## 🏗️ **Datenbank-Schema**
 
-### **Generator & Datasource**
-```prisma
-generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
-}
+### **Core Schema - Benutzer & Authentifizierung**
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  extensions = [pg_trgm, btree_gin, uuid_ossp]
-}
-```
-
-### **Enums für Typsicherheit**
-```prisma
-enum UserRole {
-  ADMIN
-  ORGANIZER
-  ONSITE
-  EXTERNAL_VENDOR
-}
-
-enum ProjectStatus {
-  PLANNING
-  APPROVAL_PENDING
-  APPROVED
-  ACTIVE
-  COMPLETED
-  CANCELLED
-  ARCHIVED
-}
-
-enum TaskStatus {
-  TODO
-  IN_PROGRESS
-  REVIEW
-  COMPLETED
-  BLOCKED
-  CANCELLED
-}
-
-enum ApprovalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  UNDER_REVIEW
-  ESCALATED
-}
-
-enum BOMItemType {
-  MATERIAL
-  EQUIPMENT
-  SERVICE
-  LABOR
-  OVERHEAD
-}
-
-enum Currency {
-  EUR
-  USD
-  CHF
-  GBP
-}
-```
-
-### **Core Entities (Benutzer & Authentifizierung)**
-
-#### **User Model**
-```prisma
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         UserRole
-  isActive     Boolean  @default(true)
-  phone        String?
-  department   String?
-  position     String?
-  avatar       String?
-  lastLogin    DateTime?
-  timezone     String   @default("Europe/Berlin")
-  language     String   @default("de")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  ownedProjects     Project[] @relation("ProjectOwner")
-  assignedProjects  Project[] @relation("ProjectMembers")
-  comments          Comment[]
-  auditLogs         AuditLog[]
-  uploadedFiles     File[] @relation("FileUploader")
-  bomChanges        BOMChange[]
-  supplierRatings   SupplierRating[]
-  expenseApprovals  ProjectExpense[] @relation("ExpenseApprover")
-  assignedTasks     Task[] @relation("TaskAssignee")
-  timeLogs          TimeLog[]
-  taskComments      TaskComment[]
-  slotReservations  SlotReservation[]
-  responsiblePermits Permit[] @relation("PermitResponsible")
-  permits           Permit[] @relation("PermitRequestor")
-
-  @@map("users")
-  @@index([email])
-  @@index([role])
-  @@index([isActive])
-}
-```
-
-#### **Role & Permission Models**
-```prisma
-model Role {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  permissions Permission[]
-  users       User[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("roles")
-}
-
-model Permission {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  resource    String   // z.B. "project", "bom", "supplier"
-  action      String   // z.B. "create", "read", "update", "delete"
-  roles       Role[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("permissions")
-  @@unique([resource, action])
-}
-```
-
-### **Business Logic Entities**
-
-#### **Project Model**
-```prisma
-model Project {
-  id             String        @id @default(cuid())
-  name           String
-  description   String?
-  status         ProjectStatus @default(PLANNING)
-  dateFrom       DateTime
-  dateTo         DateTime
-  startDate      DateTime      // Für Kompatibilität
-  locationName   String
-  address        String?
-  lat            Float?
-  lng            Float?
-  ownerId        String
-  budgetEstimate Float?
-  budget         Float?
-  currency       Currency      @default(EUR)
-  priority       String?       // LOW, MEDIUM, HIGH, CRITICAL
-  manager        String?
-  client         String?
-  notes          String?
-  tags           String[]      // Für Kategorisierung
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  // Relations
-  owner              User                    @relation("ProjectOwner", fields: [ownerId], references: [id])
-  members            User[]                  @relation("ProjectMembers")
-  bomItems          BomItem[]
-  suppliers         ProjectSupplier[]
-  tasks             Task[]
-  slots             Slot[]
-  permits           Permit[]
-  expenses          ProjectExpense[]
-  comments          Comment[]
-  files             File[]
-
-  @@map("projects")
-  @@index([ownerId])
-  @@index([status])
-  @@index([dateFrom])
-  @@index([dateTo])
-  @@index([locationName])
-  @@index([tags])
-}
-```
-
-#### **BOM Item Model**
-```prisma
-model BomItem {
-  id          String      @id @default(cuid())
-  projectId   String
-  parentId    String?     // Für hierarchische Struktur
-  name        String
-  description String?
-  type        BOMItemType
-  quantity    Float
-  unit        String
-  cost        Float?
-  supplierId  String?
-  categoryId  String?
-  sku         String?     // Stock Keeping Unit
-  weight      Float?
-  dimensions  Json?        // {length, width, height}
-  notes       String?
-  version     Int          @default(1)
-  isActive    Boolean      @default(true)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  // Relations
-  project    Project     @relation(fields: [projectId], references: [id])
-  parent     BomItem?    @relation("BOMHierarchy", fields: [parentId], references: [id])
-  children   BomItem[]   @relation("BOMHierarchy")
-  supplier   Supplier?   @relation(fields: [supplierId], references: [id])
-  category   Category?   @relation(fields: [categoryId], references: [id])
-  changes    BOMChange[]
-
-  @@map("bom_items")
-  @@index([projectId])
-  @@index([parentId])
-  @@index([type])
-  @@index([categoryId])
-  @@index([supplierId])
-  @@index([sku])
-}
-```
-
-#### **Supplier Model**
-```prisma
-model Supplier {
-  id            String   @id @default(cuid())
-  name          String
-  description   String?
-  contactPerson String?
-  email         String
-  phone         String?
-  website       String?
-  address       String?
-  city          String?
-  country       String?
-  postalCode    String?
-  taxId         String?
-  rating        Float?   // Durchschnittsbewertung 1-5
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
-  categories       SupplierCategory[]
-  projects        ProjectSupplier[]
-  bomItems        BomItem[]
-  ratings         SupplierRating[]
-  availability    SupplierAvailability[]
-
-  @@map("suppliers")
-  @@index([name])
-  @@index([email])
-  @@index([rating])
-  @@index([isActive])
-}
-```
-
-#### **Task Model**
-```prisma
-model Task {
-  id          String     @id @default(cuid())
-  projectId   String
-  name        String
-  description String?
-  status      TaskStatus @default(TODO)
-  priority    String?    // LOW, MEDIUM, HIGH, CRITICAL
-  assigneeId  String?
-  dueDate     DateTime?
-  startDate   DateTime?
-  endDate     DateTime?
-  estimatedHours Float?
-  actualHours   Float?
-  dependencies  String[]  // IDs abhängiger Tasks
-  tags         String[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  // Relations
-  project       Project        @relation(fields: [projectId], references: [id])
-  assignee      User?          @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  comments      TaskComment[]
-  timeLogs      TimeLog[]
-  slotReservations SlotReservation[]
-
-  @@map("tasks")
-  @@index([projectId])
-  @@index([assigneeId])
-  @@index([status])
-  @@index([dueDate])
-  @@index([priority])
-  @@index([tags])
-}
-```
-
----
-
-## 🔐 **Row Level Security (RLS)**
-
-### **RLS-Policies für Supabase**
-
-#### **Users Table**
+#### **users** - Benutzerverwaltung
 ```sql
--- RLS aktivieren
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(50),
+    avatar_url VARCHAR(500),
+    timezone VARCHAR(50) DEFAULT 'UTC',
+    language VARCHAR(10) DEFAULT 'de',
+    is_active BOOLEAN DEFAULT true,
+    is_verified BOOLEAN DEFAULT false,
+    last_login_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Policy: Benutzer können nur sich selbst sehen
-CREATE POLICY "Users can view own profile" ON users
-  FOR SELECT USING (auth.uid()::text = id);
-
--- Policy: Admins können alle Benutzer sehen
-CREATE POLICY "Admins can view all users" ON users
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid()::text AND role = 'ADMIN'
-    )
-  );
+-- Indizes für Performance
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_active ON users(is_active);
+CREATE INDEX idx_users_created_at ON users(created_at);
 ```
 
-#### **Projects Table**
+#### **user_roles** - Rollenverwaltung
 ```sql
--- RLS aktivieren
+CREATE TABLE user_roles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    permissions JSONB NOT NULL DEFAULT '{}',
+    is_system_role BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Standard-Rollen
+INSERT INTO user_roles (name, description, permissions, is_system_role) VALUES
+('super_admin', 'Super Administrator mit allen Rechten', '{"*": "*"}', true),
+('admin', 'Administrator mit erweiterten Rechten', '{"projects": "*", "users": "read", "reports": "*"}', true),
+('project_manager', 'Projektmanager mit Projektverwaltungsrechten', '{"projects": "*", "tasks": "*", "reports": "read"}', true),
+('team_member', 'Teammitglied mit begrenzten Rechten', '{"projects": "read", "tasks": "read,write", "files": "read,write"}', true),
+('viewer', 'Betrachter mit nur Lese-Rechten', '{"projects": "read", "reports": "read"}', true);
+```
+
+#### **user_permissions** - Berechtigungsverwaltung
+```sql
+CREATE TABLE user_permissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role_id UUID NOT NULL REFERENCES user_roles(id) ON DELETE CASCADE,
+    resource_type VARCHAR(100) NOT NULL,
+    resource_id UUID,
+    permissions JSONB NOT NULL DEFAULT '{}',
+    granted_by UUID REFERENCES users(id),
+    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP,
+    UNIQUE(user_id, resource_type, resource_id)
+);
+
+CREATE INDEX idx_user_permissions_user_id ON user_permissions(user_id);
+CREATE INDEX idx_user_permissions_resource ON user_permissions(resource_type, resource_id);
+```
+
+#### **user_sessions** - Session-Management
+```sql
+CREATE TABLE user_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_token VARCHAR(255) UNIQUE NOT NULL,
+    refresh_token VARCHAR(255) UNIQUE NOT NULL,
+    ip_address INET,
+    user_agent TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    last_activity_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX idx_user_sessions_token ON user_sessions(session_token);
+CREATE INDEX idx_user_sessions_expires ON user_sessions(expires_at);
+```
+
+### **Business Schema - Projekte & Events**
+
+#### **organizations** - Organisationsverwaltung
+```sql
+CREATE TABLE organizations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    logo_url VARCHAR(500),
+    website VARCHAR(500),
+    industry VARCHAR(100),
+    size VARCHAR(50),
+    founded_year INTEGER,
+    address JSONB,
+    contact_info JSONB,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_organizations_name ON organizations(name);
+CREATE INDEX idx_organizations_active ON organizations(is_active);
+```
+
+#### **clients** - Kundenverwaltung
+```sql
+CREATE TABLE clients (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID REFERENCES organizations(id),
+    name VARCHAR(255) NOT NULL,
+    contact_person VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    address JSONB,
+    billing_info JSONB,
+    notes TEXT,
+    status VARCHAR(50) DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_clients_organization_id ON clients(organization_id);
+CREATE INDEX idx_clients_name ON clients(name);
+CREATE INDEX idx_clients_status ON clients(status);
+```
+
+#### **projects** - Projektverwaltung
+```sql
+CREATE TABLE projects (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'PLANNING',
+    priority VARCHAR(20) DEFAULT 'MEDIUM',
+    start_date DATE,
+    end_date DATE,
+    budget DECIMAL(15,2),
+    actual_cost DECIMAL(15,2),
+    manager_id UUID REFERENCES users(id),
+    client_id UUID REFERENCES clients(id),
+    organization_id UUID REFERENCES organizations(id),
+    tags TEXT[],
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_projects_status ON projects(status);
+CREATE INDEX idx_projects_manager_id ON projects(manager_id);
+CREATE INDEX idx_projects_client_id ON projects(client_id);
+CREATE INDEX idx_projects_dates ON projects(start_date, end_date);
+CREATE INDEX idx_projects_priority ON projects(priority);
+```
+
+#### **project_members** - Projektmitglieder
+```sql
+CREATE TABLE project_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR(100) NOT NULL,
+    permissions JSONB DEFAULT '{}',
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    left_at TIMESTAMP,
+    is_active BOOLEAN DEFAULT true,
+    UNIQUE(project_id, user_id)
+);
+
+CREATE INDEX idx_project_members_project_id ON project_members(project_id);
+CREATE INDEX idx_project_members_user_id ON project_members(user_id);
+CREATE INDEX idx_project_members_active ON project_members(is_active);
+```
+
+#### **project_phases** - Projektphasen
+```sql
+CREATE TABLE project_phases (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    order_index INTEGER NOT NULL,
+    status VARCHAR(50) DEFAULT 'PENDING',
+    start_date DATE,
+    end_date DATE,
+    progress_percentage INTEGER DEFAULT 0,
+    dependencies JSONB DEFAULT '[]',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_project_phases_project_id ON project_phases(project_id);
+CREATE INDEX idx_project_phases_order ON project_phases(project_id, order_index);
+CREATE INDEX idx_project_phases_status ON project_phases(status);
+```
+
+### **Business Schema - BOM & Materialverwaltung**
+
+#### **bom_items** - Bill of Materials
+```sql
+CREATE TABLE bom_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    parent_id UUID REFERENCES bom_items(id),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    sku VARCHAR(100),
+    category VARCHAR(100),
+    quantity DECIMAL(10,3) NOT NULL,
+    unit VARCHAR(50) NOT NULL,
+    unit_price DECIMAL(15,2),
+    total_price DECIMAL(15,2),
+    supplier_id UUID REFERENCES suppliers(id),
+    status VARCHAR(50) DEFAULT 'PLANNED',
+    priority VARCHAR(20) DEFAULT 'MEDIUM',
+    delivery_date DATE,
+    notes TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_bom_items_project_id ON bom_items(project_id);
+CREATE INDEX idx_bom_items_parent_id ON bom_items(parent_id);
+CREATE INDEX idx_bom_items_supplier_id ON bom_items(supplier_id);
+CREATE INDEX idx_bom_items_status ON bom_items(status);
+CREATE INDEX idx_bom_items_category ON bom_items(category);
+```
+
+#### **suppliers** - Lieferantenverwaltung
+```sql
+CREATE TABLE suppliers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    contact_person VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    website VARCHAR(500),
+    address JSONB,
+    tax_id VARCHAR(100),
+    payment_terms VARCHAR(100),
+    rating DECIMAL(3,2),
+    category VARCHAR(100),
+    specialties TEXT[],
+    certifications TEXT[],
+    performance_metrics JSONB DEFAULT '{}',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_suppliers_name ON suppliers(name);
+CREATE INDEX idx_suppliers_category ON suppliers(category);
+CREATE INDEX idx_suppliers_active ON suppliers(is_active);
+CREATE INDEX idx_suppliers_rating ON suppliers(rating);
+```
+
+#### **supplier_contracts** - Lieferantenverträge
+```sql
+CREATE TABLE supplier_contracts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    supplier_id UUID NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+    project_id UUID REFERENCES projects(id),
+    contract_number VARCHAR(100) UNIQUE NOT NULL,
+    contract_type VARCHAR(100) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    total_value DECIMAL(15,2),
+    payment_terms VARCHAR(100),
+    terms_conditions TEXT,
+    status VARCHAR(50) DEFAULT 'ACTIVE',
+    documents JSONB DEFAULT '[]',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_supplier_contracts_supplier_id ON supplier_contracts(supplier_id);
+CREATE INDEX idx_supplier_contracts_project_id ON supplier_contracts(project_id);
+CREATE INDEX idx_supplier_contracts_status ON supplier_contracts(status);
+```
+
+### **Business Schema - Genehmigungen & Logistik**
+
+#### **permits** - Genehmigungsverwaltung
+```sql
+CREATE TABLE permits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    type VARCHAR(100) NOT NULL,
+    category VARCHAR(100),
+    status VARCHAR(50) DEFAULT 'PENDING',
+    priority VARCHAR(20) DEFAULT 'MEDIUM',
+    application_date DATE,
+    submission_date DATE,
+    approval_date DATE,
+    expiry_date DATE,
+    cost DECIMAL(15,2),
+    issuing_authority VARCHAR(255),
+    reference_number VARCHAR(100),
+    requirements TEXT[],
+    documents JSONB DEFAULT '[]',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_permits_project_id ON permits(project_id);
+CREATE INDEX idx_permits_type ON permits(type);
+CREATE INDEX idx_permits_status ON permits(status);
+CREATE INDEX idx_permits_dates ON permits(application_date, approval_date, expiry_date);
+```
+
+#### **logistics** - Logistikverwaltung
+```sql
+CREATE TABLE logistics (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    type VARCHAR(100) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    from_location JSONB,
+    to_location JSONB,
+    scheduled_date TIMESTAMP,
+    actual_date TIMESTAMP,
+    status VARCHAR(50) DEFAULT 'PLANNED',
+    priority VARCHAR(20) DEFAULT 'MEDIUM',
+    cost DECIMAL(15,2),
+    carrier VARCHAR(255),
+    tracking_number VARCHAR(100),
+    special_requirements TEXT[],
+    documents JSONB DEFAULT '[]',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_logistics_project_id ON logistics(project_id);
+CREATE INDEX idx_logistics_type ON logistics(type);
+CREATE INDEX idx_logistics_status ON logistics(status);
+CREATE INDEX idx_logistics_dates ON logistics(scheduled_date, actual_date);
+```
+
+### **Business Schema - Aufgaben & Workflows**
+
+#### **tasks** - Aufgabenverwaltung
+```sql
+CREATE TABLE tasks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    parent_task_id UUID REFERENCES tasks(id),
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    status VARCHAR(50) DEFAULT 'TODO',
+    priority VARCHAR(20) DEFAULT 'MEDIUM',
+    type VARCHAR(100),
+    assigned_to UUID REFERENCES users(id),
+    created_by UUID REFERENCES users(id),
+    due_date DATE,
+    estimated_hours DECIMAL(5,2),
+    actual_hours DECIMAL(5,2),
+    progress_percentage INTEGER DEFAULT 0,
+    dependencies JSONB DEFAULT '[]',
+    tags TEXT[],
+    attachments JSONB DEFAULT '[]',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_tasks_project_id ON tasks(project_id);
+CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
+CREATE INDEX idx_tasks_status ON tasks(status);
+CREATE INDEX idx_tasks_priority ON tasks(priority);
+CREATE INDEX idx_tasks_due_date ON tasks(due_date);
+CREATE INDEX idx_tasks_parent_task_id ON tasks(parent_task_id);
+```
+
+#### **task_comments** - Aufgabenkommentare
+```sql
+CREATE TABLE task_comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    parent_comment_id UUID REFERENCES task_comments(id),
+    is_internal BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_task_comments_task_id ON task_comments(task_id);
+CREATE INDEX idx_task_comments_user_id ON task_comments(user_id);
+CREATE INDEX idx_task_comments_parent ON task_comments(parent_comment_id);
+```
+
+#### **task_attachments** - Aufgabenanhänge
+```sql
+CREATE TABLE task_attachments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    file_id UUID NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    uploaded_by UUID NOT NULL REFERENCES users(id),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_task_attachments_task_id ON task_attachments(task_id);
+CREATE INDEX idx_task_attachments_file_id ON task_attachments(file_id);
+```
+
+### **Workflow Schema - Kanban & Workflow-Management**
+
+#### **kanban_boards** - Kanban-Boards
+```sql
+CREATE TABLE kanban_boards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    board_type VARCHAR(100) DEFAULT 'TASK',
+    settings JSONB DEFAULT '{}',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_kanban_boards_project_id ON kanban_boards(project_id);
+CREATE INDEX idx_kanban_boards_active ON kanban_boards(is_active);
+```
+
+#### **kanban_columns** - Kanban-Spalten
+```sql
+CREATE TABLE kanban_columns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id UUID NOT NULL REFERENCES kanban_boards(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    order_index INTEGER NOT NULL,
+    color VARCHAR(7),
+    wip_limit INTEGER,
+    settings JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_kanban_columns_board_id ON kanban_columns(board_id);
+CREATE INDEX idx_kanban_columns_order ON kanban_columns(board_id, order_index);
+```
+
+#### **kanban_cards** - Kanban-Karten
+```sql
+CREATE TABLE kanban_cards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    column_id UUID NOT NULL REFERENCES kanban_columns(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    content JSONB DEFAULT '{}',
+    assigned_to UUID REFERENCES users(id),
+    priority VARCHAR(20) DEFAULT 'MEDIUM',
+    due_date DATE,
+    order_index INTEGER NOT NULL,
+    size VARCHAR(20),
+    tags TEXT[],
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_kanban_cards_column_id ON kanban_cards(column_id);
+CREATE INDEX idx_kanban_cards_assigned_to ON kanban_cards(assigned_to);
+CREATE INDEX idx_kanban_cards_order ON kanban_cards(column_id, order_index);
+CREATE INDEX idx_kanban_cards_priority ON kanban_cards(priority);
+```
+
+### **File Management Schema**
+
+#### **files** - Dateiverwaltung
+```sql
+CREATE TABLE files (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES projects(id),
+    name VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size BIGINT NOT NULL,
+    mime_type VARCHAR(100),
+    extension VARCHAR(20),
+    category VARCHAR(100),
+    tags TEXT[],
+    metadata JSONB DEFAULT '{}',
+    uploaded_by UUID NOT NULL REFERENCES users(id),
+    is_public BOOLEAN DEFAULT false,
+    download_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_files_project_id ON files(project_id);
+CREATE INDEX idx_files_uploaded_by ON files(uploaded_by);
+CREATE INDEX idx_files_category ON files(category);
+CREATE INDEX idx_files_mime_type ON files(mime_type);
+CREATE INDEX idx_files_created_at ON files(created_at);
+```
+
+#### **file_versions** - Dateiversionen
+```sql
+CREATE TABLE file_versions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    file_id UUID NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    version_number INTEGER NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size BIGINT NOT NULL,
+    change_description TEXT,
+    uploaded_by UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(file_id, version_number)
+);
+
+CREATE INDEX idx_file_versions_file_id ON file_versions(file_id);
+CREATE INDEX idx_file_versions_version ON file_versions(file_id, version_number);
+```
+
+### **Audit & Logging Schema**
+
+#### **audit_logs** - Audit-Logs
+```sql
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    table_name VARCHAR(100) NOT NULL,
+    record_id UUID NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    old_values JSONB,
+    new_values JSONB,
+    user_id UUID REFERENCES users(id),
+    ip_address INET,
+    user_agent TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_audit_logs_table_record ON audit_logs(table_name, record_id);
+CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp);
+CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+```
+
+#### **system_logs** - System-Logs
+```sql
+CREATE TABLE system_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    level VARCHAR(20) NOT NULL,
+    message TEXT NOT NULL,
+    context JSONB DEFAULT '{}',
+    user_id UUID REFERENCES users(id),
+    ip_address INET,
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_system_logs_level ON system_logs(level);
+CREATE INDEX idx_system_logs_user_id ON system_logs(user_id);
+CREATE INDEX idx_system_logs_created_at ON system_logs(created_at);
+```
+
+## 🔧 **Datenbank-Optimierungen**
+
+### **Indizierungsstrategie**
+```sql
+-- Composite Indexes für häufige Queries
+CREATE INDEX idx_projects_status_dates ON projects(status, start_date, end_date);
+CREATE INDEX idx_tasks_project_status ON tasks(project_id, status, priority);
+CREATE INDEX idx_bom_items_project_category ON bom_items(project_id, category, status);
+
+-- Partial Indexes für aktive Datensätze
+CREATE INDEX idx_active_projects ON projects(id) WHERE is_active = true;
+CREATE INDEX idx_active_tasks ON tasks(id) WHERE status != 'COMPLETED';
+
+-- GIN Indexes für JSONB-Felder
+CREATE INDEX idx_projects_metadata ON projects USING GIN (metadata);
+CREATE INDEX idx_tasks_tags ON tasks USING GIN (tags);
+CREATE INDEX idx_files_tags ON files USING GIN (tags);
+```
+
+### **Partitionierung**
+```sql
+-- Zeitbasierte Partitionierung für große Tabellen
+CREATE TABLE audit_logs_partitioned (
+    id UUID NOT NULL,
+    table_name VARCHAR(100) NOT NULL,
+    record_id UUID NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    old_values JSONB,
+    new_values JSONB,
+    user_id UUID,
+    ip_address INET,
+    user_agent TEXT,
+    timestamp TIMESTAMP NOT NULL
+) PARTITION BY RANGE (timestamp);
+
+-- Partitionen für verschiedene Zeiträume
+CREATE TABLE audit_logs_2024 PARTITION OF audit_logs_partitioned
+    FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
+
+CREATE TABLE audit_logs_2025 PARTITION OF audit_logs_partitioned
+    FOR VALUES FROM ('2025-01-01') TO ('2026-01-01');
+```
+
+### **Materialized Views**
+```sql
+-- Materialized View für Projekt-Übersicht
+CREATE MATERIALIZED VIEW project_summary AS
+SELECT 
+    p.id,
+    p.name,
+    p.status,
+    p.start_date,
+    p.end_date,
+    p.budget,
+    p.actual_cost,
+    COUNT(t.id) as total_tasks,
+    COUNT(CASE WHEN t.status = 'COMPLETED' THEN 1 END) as completed_tasks,
+    ROUND(
+        (COUNT(CASE WHEN t.status = 'COMPLETED' THEN 1 END)::DECIMAL / 
+         COUNT(t.id)::DECIMAL) * 100, 2
+    ) as completion_percentage
+FROM projects p
+LEFT JOIN tasks t ON p.id = t.project_id
+GROUP BY p.id, p.name, p.status, p.start_date, p.end_date, p.budget, p.actual_cost;
+
+-- Refresh der Materialized View
+REFRESH MATERIALIZED VIEW project_summary;
+```
+
+## 🔒 **Sicherheit & Berechtigungen**
+
+### **Row Level Security (RLS)**
+```sql
+-- RLS für Projekte aktivieren
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
--- Policy: Projektbesitzer und Mitglieder können zugreifen
-CREATE POLICY "Project access" ON projects
-  FOR ALL USING (
-    owner_id = auth.uid()::text OR
-    EXISTS (
-      SELECT 1 FROM _ProjectMembers 
-      WHERE "A" = projects.id AND "B" = auth.uid()::text
-    )
-  );
-```
-
-#### **BOM Items Table**
-```sql
--- RLS aktivieren
-ALTER TABLE bom_items ENABLE ROW LEVEL SECURITY;
-
--- Policy: Nur Projektmitglieder können BOM-Items sehen
-CREATE POLICY "BOM items access" ON bom_items
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM projects p
-      WHERE p.id = bom_items.project_id AND (
-        p.owner_id = auth.uid()::text OR
+-- Policy für Projektzugriff
+CREATE POLICY project_access_policy ON projects
+    FOR ALL
+    USING (
         EXISTS (
-          SELECT 1 FROM _ProjectMembers pm
-          WHERE pm."A" = p.id AND pm."B" = auth.uid()::text
+            SELECT 1 FROM project_members pm
+            WHERE pm.project_id = projects.id
+            AND pm.user_id = current_setting('app.current_user_id')::UUID
+            AND pm.is_active = true
         )
-      )
-    )
-  );
+        OR 
+        projects.manager_id = current_setting('app.current_user_id')::UUID
+    );
+
+-- RLS für Aufgaben aktivieren
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+
+-- Policy für Aufgabenzugriff
+CREATE POLICY task_access_policy ON tasks
+    FOR ALL
+    USING (
+        EXISTS (
+            SELECT 1 FROM project_members pm
+            WHERE pm.project_id = tasks.project_id
+            AND pm.user_id = current_setting('app.current_user_id')::UUID
+            AND pm.is_active = true
+        )
+        OR 
+        tasks.assigned_to = current_setting('app.current_user_id')::UUID
+    );
 ```
 
----
-
-## 📊 **Indizierung & Performance**
-
-### **Primary Indices**
-- Alle Tabellen haben **Primary Keys** mit `@id @default(cuid())`
-- **Unique Constraints** für E-Mail-Adressen und Namen
-
-### **Performance Indices**
+### **Funktionen für Berechtigungsprüfung**
 ```sql
--- Benutzer-Indices
-CREATE INDEX "users_email_idx" ON "users"("email");
-CREATE INDEX "users_role_idx" ON "users"("role");
-CREATE INDEX "users_isActive_idx" ON "users"("isActive");
-
--- Projekt-Indices
-CREATE INDEX "projects_ownerId_idx" ON "projects"("ownerId");
-CREATE INDEX "projects_status_idx" ON "projects"("status");
-CREATE INDEX "projects_dateFrom_idx" ON "projects"("dateFrom");
-CREATE INDEX "projects_dateTo_idx" ON "projects"("dateTo");
-
--- BOM-Item-Indices
-CREATE INDEX "bom_items_projectId_idx" ON "bom_items"("projectId");
-CREATE INDEX "bom_items_type_idx" ON "bom_items"("type");
-CREATE INDEX "bom_items_categoryId_idx" ON "bom_items"("categoryId");
-
--- Task-Indices
-CREATE INDEX "tasks_projectId_idx" ON "tasks"("projectId");
-CREATE INDEX "tasks_assigneeId_idx" ON "tasks"("assigneeId");
-CREATE INDEX "tasks_status_idx" ON "tasks"("status");
-CREATE INDEX "tasks_dueDate_idx" ON "tasks"("dueDate");
+-- Funktion zur Berechtigungsprüfung
+CREATE OR REPLACE FUNCTION check_user_permission(
+    p_user_id UUID,
+    p_resource_type VARCHAR,
+    p_resource_id UUID,
+    p_permission VARCHAR
+) RETURNS BOOLEAN AS $$
+DECLARE
+    has_permission BOOLEAN := false;
+BEGIN
+    -- Prüfe direkte Benutzerberechtigungen
+    SELECT EXISTS (
+        SELECT 1 FROM user_permissions up
+        WHERE up.user_id = p_user_id
+        AND up.resource_type = p_resource_type
+        AND (up.resource_id = p_resource_id OR up.resource_id IS NULL)
+        AND up.permissions ? p_permission
+        AND (up.expires_at IS NULL OR up.expires_at > CURRENT_TIMESTAMP)
+    ) INTO has_permission;
+    
+    -- Prüfe Rollenberechtigungen
+    IF NOT has_permission THEN
+        SELECT EXISTS (
+            SELECT 1 FROM users u
+            JOIN user_roles ur ON u.role_id = ur.id
+            WHERE u.id = p_user_id
+            AND ur.permissions ? p_permission
+        ) INTO has_permission;
+    END IF;
+    
+    RETURN has_permission;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
-### **Composite Indices**
-```sql
--- Für häufige Abfragen
-CREATE INDEX "projects_owner_status_idx" ON "projects"("ownerId", "status");
-CREATE INDEX "tasks_project_status_idx" ON "tasks"("projectId", "status");
-CREATE INDEX "bom_items_project_type_idx" ON "bom_items"("projectId", "type");
-```
-
-### **Full-Text Search Indices**
-```sql
--- Für Projektnamen und Beschreibungen
-CREATE INDEX "projects_search_idx" ON "projects" USING gin(to_tsvector('german', name || ' ' || COALESCE(description, '')));
-
--- Für BOM-Item-Namen
-CREATE INDEX "bom_items_search_idx" ON "bom_items" USING gin(to_tsvector('german', name || ' ' || COALESCE(description, '')));
-```
-
----
-
-## 🔄 **Migration & Deployment**
-
-### **Supabase Migration**
-```bash
-# 1. Supabase-Projekt einrichten
-# 2. Umgebungsvariablen konfigurieren
-cp apps/api/env.supabase.example apps/api/.env
-
-# 3. Migration durchführen
-cd apps/api
-npm run db:generate
-npm run db:migrate:deploy
-npm run db:seed
-```
-
-### **Migration-Datei**
-Die initiale Migration befindet sich in:
-```
-apps/api/prisma/migrations/20241201000000_init/migration.sql
-```
-
-### **Schema-Push (Entwicklung)**
-```bash
-# Für schnelle Entwicklung
-npm run db:push
-```
-
----
-
-## 🌱 **Seed-Daten**
-
-### **Standard-Rollen**
-- **ADMIN**: System-Administrator mit vollen Rechten
-- **ORGANIZER**: Event-Organisator mit Projektverwaltungsrechten
-- **ONSITE**: Onsite-Team mit Ausführungsrechten
-- **EXTERNAL_VENDOR**: Externer Lieferant mit eingeschränkten Rechten
-
-### **Standard-Berechtigungen**
-- Projekt-Berechtigungen (create, read, update, delete)
-- BOM-Berechtigungen (create, read, update, delete)
-- Lieferanten-Berechtigungen (create, read, update, delete)
-- Task-Berechtigungen (create, read, update, delete)
-- Genehmigungs-Berechtigungen (create, read, update, approve)
-
-### **Demo-Daten**
-- **Admin-User**: admin@elementaro.com / admin123
-- **Demo-Organizer**: organizer@elementaro.com / organizer123
-- **Demo-Projekt**: "Demo Event 2024" mit BOM-Items, Tasks und Slots
-
----
-
-## 🔒 **Sicherheit & Compliance**
-
-### **Audit-Logging**
-Alle kritischen Datenbankoperationen werden protokolliert:
-- Benutzer-Aktionen (CREATE, UPDATE, DELETE)
-- Ressourcen-Änderungen
-- IP-Adressen und User-Agents
-- Zeitstempel für Compliance
-
-### **Datenverschlüsselung**
-- **Passwort-Hashing** mit bcrypt (Salt Rounds: 12)
-- **HTTPS/TLS** für alle Verbindungen
-- **Supabase Standard-Verschlüsselung** für Datenbank
+## 📊 **Backup & Recovery**
 
 ### **Backup-Strategie**
-- **Automatische Backups** durch Supabase
-- **Point-in-Time Recovery** verfügbar
-- **Geografische Redundanz** für Disaster Recovery
-
----
-
-## 📈 **Skalierung & Performance**
-
-### **Supabase Auto-Scaling**
-- **Automatische Skalierung** basierend auf Last
-- **Connection Pooling** für optimale Performance
-- **Query Optimization** durch Supabase Query Optimizer
-
-### **Partitioning (Optional)**
 ```sql
--- Für große Projekttabellen
-CREATE TABLE projects_2024 PARTITION OF projects
-FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
+-- WAL-Archiving aktivieren
+ALTER SYSTEM SET wal_level = replica;
+ALTER SYSTEM SET archive_mode = on;
+ALTER SYSTEM SET archive_command = 'test ! -f /var/lib/postgresql/archive/%f && cp %p /var/lib/postgresql/archive/%f';
 
-CREATE TABLE projects_2025 PARTITION OF projects
-FOR VALUES FROM ('2025-01-01') TO ('2026-01-01');
+-- Point-in-Time Recovery aktivieren
+ALTER SYSTEM SET recovery_target_timeline = 'latest';
+ALTER SYSTEM SET restore_command = 'cp /var/lib/postgresql/archive/%f %p';
+
+-- Automatische VACUUM-Optimierung
+ALTER SYSTEM SET autovacuum = on;
+ALTER SYSTEM SET autovacuum_vacuum_scale_factor = 0.1;
+ALTER SYSTEM SET autovacuum_analyze_scale_factor = 0.05;
 ```
 
-### **Read-Replicas (Optional)**
-- **Lese-intensive Operationen** auf Replicas
-- **Schreiboperationen** auf Primary
-- **Automatische Synchronisation**
+### **Maintenance-Funktionen**
+```sql
+-- Funktion für automatische Wartung
+CREATE OR REPLACE FUNCTION perform_maintenance() RETURNS VOID AS $$
+BEGIN
+    -- VACUUM für alle Tabellen
+    VACUUM ANALYZE;
+    
+    -- Statistiken aktualisieren
+    ANALYZE;
+    
+    -- Alte Logs bereinigen (älter als 1 Jahr)
+    DELETE FROM system_logs WHERE created_at < CURRENT_DATE - INTERVAL '1 year';
+    DELETE FROM audit_logs WHERE timestamp < CURRENT_DATE - INTERVAL '1 year';
+    
+    -- Materialized Views aktualisieren
+    REFRESH MATERIALIZED VIEW project_summary;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+## 🚀 **Performance-Monitoring**
+
+### **Performance-Views**
+```sql
+-- View für langsame Queries
+CREATE VIEW slow_queries AS
+SELECT 
+    query,
+    calls,
+    total_time,
+    mean_time,
+    rows
+FROM pg_stat_statements
+WHERE mean_time > 100
+ORDER BY mean_time DESC;
+
+-- View für Tabellen-Performance
+CREATE VIEW table_performance AS
+SELECT 
+    schemaname,
+    tablename,
+    seq_scan,
+    seq_tup_read,
+    idx_scan,
+    idx_tup_fetch,
+    n_tup_ins,
+    n_tup_upd,
+    n_tup_del,
+    n_live_tup,
+    n_dead_tup
+FROM pg_stat_user_tables
+ORDER BY n_live_tup DESC;
+```
 
 ---
 
-## 🔧 **Entwicklung & Wartung**
+## 📝 **Implementierungsplan**
 
-### **Prisma Studio**
-```bash
-# Datenbank-GUI öffnen
-npm run db:studio
-```
+### **Phase 1: Schema-Erstellung (Woche 1)**
+- [ ] Alle Tabellen erstellen
+- [ ] Indizes und Constraints definieren
+- [ ] Basis-Daten einfügen
+- [ ] RLS-Policies implementieren
 
-### **Nützliche Befehle**
-```bash
-# Prisma Client generieren
-npm run db:generate
+### **Phase 2: Optimierung (Woche 2)**
+- [ ] Performance-Indizes hinzufügen
+- [ ] Materialized Views erstellen
+- [ ] Partitionierung implementieren
+- [ ] Backup-Strategie konfigurieren
 
-# Schema direkt pushen
-npm run db:push
-
-# Migration erstellen
-npm run db:migrate
-
-# Migration deployen
-npm run db:migrate:deploy
-
-# Demo-Daten einfügen
-npm run db:seed
-
-# Datenbank zurücksetzen
-npm run db:reset
-```
-
-### **Monitoring & Health Checks**
-- **Supabase Dashboard** für Datenbank-Performance
-- **Health Checks** für alle Services
-- **Performance-Metriken** und -Alerts
+### **Phase 3: Testing & Monitoring (Woche 3)**
+- [ ] Performance-Tests durchführen
+- [ ] Monitoring-Views erstellen
+- [ ] Backup & Recovery testen
+- [ ] Dokumentation vervollständigen
 
 ---
 
-## 🔗 **Verwandte Dokumente**
-
-- **Supabase Setup**: [SUPABASE_SETUP.md](../SUPABASE_SETUP.md)
-- **Technische Spezifikationen**: [technical-specifications.md](technical-specifications.md)
-- **Anforderungen**: [requirements.md](requirements.md)
-- **Anforderungen-Zusammenfassung**: [requirements-summary.md](requirements-summary.md)
-
----
-
-**Status**: ✅ Vollständig aktualisiert für Supabase-Migration  
-**Letzte Aktualisierung**: Dezember 2024  
-**Version**: 2.0 (Supabase-ready)
+*Dokument erstellt: ${new Date().toLocaleString('de-DE')}*
+*Version: 1.0.0*
+*Status: ACTIVE - IMPLEMENTATION*
+*Nächster Schritt: DATABASE_IMPLEMENTATION*
