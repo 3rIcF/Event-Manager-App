@@ -270,7 +270,7 @@ export function BOMImport() {
                     <div className="w-48">
                       <Select 
                         value={item.category} 
-                        onValueChange={(value) => handleMappingUpdate(item.id, value)}
+                        onValueChange={(value: string) => handleMappingUpdate(item.id, value)}
                       >
                         <SelectTrigger>
                           <SelectValue />
