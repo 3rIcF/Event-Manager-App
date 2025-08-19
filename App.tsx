@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { AppProvider, useApp } from './components/AppContext';
+import { AuthProvider, useAuth } from './src/hooks/useAuth';
+import { LoginForm } from './components/LoginForm';
+import { RegisterForm } from './components/RegisterForm';
 import { NewLayout } from './components/NewLayout';
 import { GlobalDashboard } from './components/GlobalDashboard';
 import { ProjectsList } from './components/ProjectsList';
@@ -18,7 +21,28 @@ import { CalendarManager } from './components/CalendarManager';
 
 function AppContent() {
   const { currentProject, globalView, projectView } = useApp();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const [showProjectWizard, setShowProjectWizard] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Lade Event Manager...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return authMode === 'login' ? (
+      <LoginForm onSwitchToRegister={() => setAuthMode('register')} />
+    ) : (
+      <RegisterForm onSwitchToLogin={() => setAuthMode('login')} />
+    );
+  }
 
   const renderContent = () => {
     if (currentProject) {
@@ -115,8 +139,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </AuthProvider>
   );
 }
