@@ -4,6 +4,10 @@ import { LoginForm } from './components/LoginForm';
 import { ServicesManagement } from './components/ServicesManagement';
 import { FinancialManagement } from './components/FinancialManagement';
 import { OperationsManagement } from './components/OperationsManagement';
+import { ProjectManagement } from './components/ProjectManagement';
+import { BOMManagement } from './components/BOMManagement';
+import { FileManagement } from './components/FileManagement';
+import { ErrorBoundary, RouteErrorBoundary } from './components/ErrorBoundary';
 
 interface Project {
   id: string;
@@ -33,7 +37,7 @@ const mockProjects: Project[] = [
 
 function AppContent() {
   const { user, signOut, loading } = useAuth();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'projects' | 'services' | 'financial' | 'operations'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'projects' | 'services' | 'financial' | 'operations' | 'bom' | 'files'>('dashboard');
   const [currentProject] = useState<Project | null>(mockProjects[0]);
 
   if (loading) {
@@ -67,29 +71,41 @@ function AppContent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Services Module</h3>
-          <p className="text-3xl font-bold text-green-600">✅ LIVE</p>
-          <p className="text-sm text-gray-500 mt-2">Timeline, Briefings, Verträge</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <div className="bg-white p-4 rounded-lg shadow-sm border cursor-pointer hover:shadow-md transition-shadow" onClick={() => setCurrentView('projects')}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">📋 Projekte</h3>
+          <p className="text-2xl font-bold text-green-600">✅ LIVE</p>
+          <p className="text-sm text-gray-500 mt-2">Management & Tracking</p>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Financial Module</h3>
-          <p className="text-3xl font-bold text-green-600">✅ LIVE</p>
-          <p className="text-sm text-gray-500 mt-2">Budget-Tracking, Rechnungen, Reports</p>
+        <div className="bg-white p-4 rounded-lg shadow-sm border cursor-pointer hover:shadow-md transition-shadow" onClick={() => setCurrentView('services')}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">👥 Services</h3>
+          <p className="text-2xl font-bold text-green-600">✅ LIVE</p>
+          <p className="text-sm text-gray-500 mt-2">Timeline & Briefings</p>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Operations</h3>
-          <p className="text-3xl font-bold text-green-600">✅ LIVE</p>
-          <p className="text-sm text-gray-500 mt-2">Checklisten, Incidents, Team-Management</p>
+        <div className="bg-white p-4 rounded-lg shadow-sm border cursor-pointer hover:shadow-md transition-shadow" onClick={() => setCurrentView('bom')}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">📦 BOM</h3>
+          <p className="text-2xl font-bold text-green-600">✅ LIVE</p>
+          <p className="text-sm text-gray-500 mt-2">Material-Management</p>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Backend API</h3>
-          <p className="text-3xl font-bold text-green-600">✅ LIVE</p>
-          <p className="text-sm text-gray-500 mt-2">Supabase, Auth, Real-time</p>
+        <div className="bg-white p-4 rounded-lg shadow-sm border cursor-pointer hover:shadow-md transition-shadow" onClick={() => setCurrentView('financial')}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">💰 Finanzen</h3>
+          <p className="text-2xl font-bold text-green-600">✅ LIVE</p>
+          <p className="text-sm text-gray-500 mt-2">Budget & Rechnungen</p>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow-sm border cursor-pointer hover:shadow-md transition-shadow" onClick={() => setCurrentView('operations')}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">⚙️ Operations</h3>
+          <p className="text-2xl font-bold text-green-600">✅ LIVE</p>
+          <p className="text-sm text-gray-500 mt-2">Live-Management</p>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow-sm border cursor-pointer hover:shadow-md transition-shadow" onClick={() => setCurrentView('files')}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">📁 Dateien</h3>
+          <p className="text-2xl font-bold text-green-600">✅ LIVE</p>
+          <p className="text-sm text-gray-500 mt-2">Dokument-Verwaltung</p>
         </div>
       </div>
 
@@ -122,12 +138,42 @@ function AppContent() {
 
   const renderContent = () => {
     switch (currentView) {
+      case 'projects':
+        return (
+          <RouteErrorBoundary>
+            <ProjectManagement />
+          </RouteErrorBoundary>
+        );
       case 'services':
-        return <ServicesManagement />;
+        return (
+          <RouteErrorBoundary>
+            <ServicesManagement />
+          </RouteErrorBoundary>
+        );
       case 'financial':
-        return <FinancialManagement />;
+        return (
+          <RouteErrorBoundary>
+            <FinancialManagement />
+          </RouteErrorBoundary>
+        );
       case 'operations':
-        return <OperationsManagement />;
+        return (
+          <RouteErrorBoundary>
+            <OperationsManagement />
+          </RouteErrorBoundary>
+        );
+      case 'bom':
+        return (
+          <RouteErrorBoundary>
+            <BOMManagement />
+          </RouteErrorBoundary>
+        );
+      case 'files':
+        return (
+          <RouteErrorBoundary>
+            <FileManagement />
+          </RouteErrorBoundary>
+        );
       default:
         return renderDashboard();
     }
@@ -147,14 +193,22 @@ function AppContent() {
             </div>
             
             <div className="flex items-center space-x-4">
-              <nav className="flex space-x-4">
+              <nav className="flex space-x-2">
                 <button 
                   onClick={() => setCurrentView('dashboard')}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     currentView === 'dashboard' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Dashboard
+                  📊 Dashboard
+                </button>
+                <button 
+                  onClick={() => setCurrentView('projects')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentView === 'projects' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  📋 Projekte
                 </button>
                 <button 
                   onClick={() => setCurrentView('services')}
@@ -162,7 +216,15 @@ function AppContent() {
                     currentView === 'services' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Services ✅
+                  👥 Services
+                </button>
+                <button 
+                  onClick={() => setCurrentView('bom')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentView === 'bom' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  📦 BOM
                 </button>
                 <button 
                   onClick={() => setCurrentView('financial')}
@@ -170,7 +232,7 @@ function AppContent() {
                     currentView === 'financial' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Finanzen ✅
+                  💰 Finanzen
                 </button>
                 <button 
                   onClick={() => setCurrentView('operations')}
@@ -178,7 +240,15 @@ function AppContent() {
                     currentView === 'operations' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Operations ✅
+                  ⚙️ Operations
+                </button>
+                <button 
+                  onClick={() => setCurrentView('files')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentView === 'files' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  📁 Dateien
                 </button>
               </nav>
               
@@ -209,9 +279,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
