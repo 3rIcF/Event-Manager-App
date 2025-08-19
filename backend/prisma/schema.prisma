@@ -87,7 +87,6 @@ model GlobalMaterial {
   
   // Relations
   projectMaterials  ProjectMaterial[]
-  comments          Comment[]
   diffNotifications DiffNotification[]
 
   @@map("global_materials")
@@ -178,7 +177,7 @@ model ProjectSupplier {
 model Comment {
   id         String      @id @default(cuid())
   entityType String      // MATERIAL, SUPPLIER, PROJECT
-  entityId   String
+  entityId   String      // Reference to the actual entity (handled in application logic)
   scope      String      // GLOBAL, PROJECT
   content    String
   createdAt  DateTime    @default(now())
@@ -188,12 +187,6 @@ model Comment {
   projectId String?
   author    User     @relation(fields: [authorId], references: [id])
   project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
-  // Polymorphic relations (handled in application logic)
-  globalMaterial  GlobalMaterial?  @relation(fields: [entityId], references: [id])
-  projectMaterial ProjectMaterial? @relation(fields: [entityId], references: [id])
-  globalSupplier  GlobalSupplier?  @relation(fields: [entityId], references: [id])
-  projectSupplier ProjectSupplier? @relation(fields: [entityId], references: [id])
 
   @@map("comments")
 }

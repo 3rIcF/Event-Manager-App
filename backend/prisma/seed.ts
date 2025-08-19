@@ -6,38 +6,65 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Create admin user
-  const adminPassword = await bcrypt.hash('admin123', 12);
-  const admin = await prisma.user.create({
-    data: {
-      name: 'System Administrator',
-      email: 'admin@eventmanager.com',
-      password: adminPassword,
-      role: 'ADMIN',
-    },
+  // Create admin user (or get existing)
+  let admin = await prisma.user.findUnique({
+    where: { email: 'admin@eventmanager.com' }
   });
+  
+  if (!admin) {
+    const adminPassword = await bcrypt.hash('admin123', 12);
+    admin = await prisma.user.create({
+      data: {
+        name: 'System Administrator',
+        email: 'admin@eventmanager.com',
+        password: adminPassword,
+        role: 'ADMIN',
+      },
+    });
+    console.log('✅ Created admin user');
+  } else {
+    console.log('📋 Admin user already exists');
+  }
 
-  // Create manager user
-  const managerPassword = await bcrypt.hash('manager123', 12);
-  const manager = await prisma.user.create({
-    data: {
-      name: 'Max Müller',
-      email: 'max.mueller@eventmanager.com',
-      password: managerPassword,
-      role: 'MANAGER',
-    },
+  // Create manager user (or get existing)
+  let manager = await prisma.user.findUnique({
+    where: { email: 'max.mueller@eventmanager.com' }
   });
+  
+  if (!manager) {
+    const managerPassword = await bcrypt.hash('manager123', 12);
+    manager = await prisma.user.create({
+      data: {
+        name: 'Max Müller',
+        email: 'max.mueller@eventmanager.com',
+        password: managerPassword,
+        role: 'MANAGER',
+      },
+    });
+    console.log('✅ Created manager user');
+  } else {
+    console.log('📋 Manager user already exists');
+  }
 
-  // Create regular user
-  const userPassword = await bcrypt.hash('user123', 12);
-  const user = await prisma.user.create({
-    data: {
-      name: 'Anna Schmidt',
-      email: 'anna.schmidt@eventmanager.com',
-      password: userPassword,
-      role: 'USER',
-    },
+  // Create regular user (or get existing)
+  let user = await prisma.user.findUnique({
+    where: { email: 'anna.schmidt@eventmanager.com' }
   });
+  
+  if (!user) {
+    const userPassword = await bcrypt.hash('user123', 12);
+    user = await prisma.user.create({
+      data: {
+        name: 'Anna Schmidt',
+        email: 'anna.schmidt@eventmanager.com',
+        password: userPassword,
+        role: 'USER',
+      },
+    });
+    console.log('✅ Created regular user');
+  } else {
+    console.log('📋 Regular user already exists');
+  }
 
   // Create test project
   const project = await prisma.project.create({
@@ -126,14 +153,15 @@ async function main() {
     },
   });
 
-  // Create test comment
+  // Create test comment for project
   await prisma.comment.create({
     data: {
-      entityType: 'MATERIAL',
-      entityId: material1.id,
-      scope: 'GLOBAL',
-      content: 'Neuer Lieferant verfügbar - bessere Preise möglich',
+      entityType: 'PROJECT',
+      entityId: project.id,
+      scope: 'PROJECT',
+      content: 'Großartiges Projekt - freue mich auf die Zusammenarbeit!',
       authorId: manager.id,
+      projectId: project.id,
     },
   });
 
