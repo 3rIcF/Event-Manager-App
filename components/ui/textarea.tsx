@@ -20,8 +20,4 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 )
 Textarea.displayName = "Textarea"
 
-<<<<<<< Current (Your changes)
-export { Textarea };
-=======
 export { Textarea }
->>>>>>> Incoming (Background Agent changes)

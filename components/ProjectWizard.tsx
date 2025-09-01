@@ -47,15 +47,14 @@ export function ProjectWizard({ open, onOpenChange }: ProjectWizardProps) {
 
   const handleSubmit = () => {
     const project = {
-      id: Date.now().toString(),
       name: formData.name,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
+      startDate: new Date(formData.startDate),
+      endDate: new Date(formData.endDate),
       location: formData.location,
       status: 'idea' as const,
-      responsible: formData.responsible,
+      manager: formData.responsible,
       description: formData.description,
-      budget: formData.budget ? parseInt(formData.budget) : undefined
+      budget: formData.budget ? parseInt(formData.budget) : undefined,
     };
 
     addProject(project);

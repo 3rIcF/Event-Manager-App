@@ -155,12 +155,6 @@ export {
   SelectLabel,
   SelectItem,
   SelectSeparator,
-<<<<<<< Current (Your changes)
-  SelectTrigger,
-  SelectValue,
-};
-=======
   SelectScrollUpButton,
   SelectScrollDownButton,
 }
->>>>>>> Incoming (Background Agent changes)

@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2017",
     "lib": [
       "dom",
       "dom.iterable",
-      "es6"
+      "es2017"
     ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
+    "noImplicitAny": false,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
@@ -21,8 +22,11 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "src",
     "components",
-    "App.tsx"
+    "App.tsx",
+    "src/index.tsx"
+  ],
+  "exclude": [
+    "src/components"
   ]
 }

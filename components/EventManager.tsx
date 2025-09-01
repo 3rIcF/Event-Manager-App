@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Event, EventStatus, EventType, EventCategory } from '../types/event';
+import { Event, EventStatus, EventType, EventCategory } from '../src/types/event';
 import { eventService } from './EventService';
 import { Button } from './ui/button';
 import { Input } from './ui/input';

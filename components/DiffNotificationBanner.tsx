@@ -107,7 +107,7 @@ export function DiffNotificationBanner() {
                       {notification.changes.length} Feld(er) geändert
                     </p>
                   </div>
-                  <Badge variant="outline" size="sm">
+                  <Badge variant="outline">
                     {notification.entityType}
                   </Badge>
                 </div>
@@ -195,7 +195,7 @@ export function DiffNotificationBanner() {
                       <div key={index} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <h5 className="font-medium">{change.field}</h5>
-                          <Badge variant="outline">Feld geändert</Badge>
+                          <Badge variant="outline">Wert geändert</Badge>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

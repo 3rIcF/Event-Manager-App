@@ -198,8 +198,5 @@ Bei Fragen oder Problemen:
 
 ---
 
-<<<<<<< Current (Your changes)
-This project is proprietary software. All rights reserved.
-=======
 **Entwickelt mit ❤️ und modernen Web-Technologien**
->>>>>>> Incoming (Background Agent changes)
+ 

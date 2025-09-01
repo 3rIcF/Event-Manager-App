@@ -118,10 +118,5 @@ export {
   DialogHeader,
   DialogFooter,
   DialogTitle,
-<<<<<<< Current (Your changes)
-  DialogTrigger,
-};
-=======
   DialogDescription,
 }
->>>>>>> Incoming (Background Agent changes)
