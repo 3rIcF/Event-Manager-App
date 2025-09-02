@@ -172,7 +172,7 @@ export function GlobalDashboard({ onNewProject }: GlobalDashboardProps) {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
                         <h4 className="font-medium">{project.name}</h4>
-                        <Badge className={getStatusColor(project.status)} size="sm">
+                        <Badge className={getStatusColor(project.status)}>
                           {getStatusLabel(project.status)}
                         </Badge>
                       </div>
@@ -185,7 +185,7 @@ export function GlobalDashboard({ onNewProject }: GlobalDashboardProps) {
                         €{project.budget ? (project.budget / 1000).toFixed(0) + 'k' : 'N/A'}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {project.responsible}
+                        {project.manager}
                       </div>
                     </div>
                   </div>

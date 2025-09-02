@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { DataProvider } from './DataContext';
 
 interface Project {
@@ -54,7 +54,11 @@ export function AppProvider({ children }: AppProviderProps) {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [projectView, setProjectView] = useState<'dashboard' | 'bom' | 'procurement' | 'permits' | 'logistics' | 'services' | 'accommodation' | 'operations' | 'finances' | 'files' | 'completion'>('dashboard');
   const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light';
+    const stored = window.localStorage.getItem('theme');
+    return (stored === 'dark' || stored === 'light') ? stored : 'light';
+  });
   const [notifications, setNotifications] = useState<any[]>([]);
   const [projects, setProjects] = useState<Project[]>([
     {
@@ -69,6 +73,15 @@ export function AppProvider({ children }: AppProviderProps) {
       manager: 'admin',
     },
   ]);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    }
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('theme', theme);
+    }
+  }, [theme]);
 
   const addProject = (project: Omit<Project, 'id'>): Project => {
     const newProject: Project = { id: `${Date.now()}`, ...project };

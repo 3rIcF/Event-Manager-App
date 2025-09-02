@@ -12,7 +12,9 @@ import {
   Users,
   Database,
   Wifi,
-  Bell
+  Bell,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 interface NewLayoutProps {
@@ -21,7 +23,7 @@ interface NewLayoutProps {
 }
 
 export function NewLayout({ children, onNewProject }: NewLayoutProps) {
-  const { globalView, setGlobalView, currentProject, setCurrentProject, projectView, setProjectView } = useApp();
+  const { globalView, setGlobalView, currentProject, setCurrentProject, projectView, setProjectView, theme, setTheme } = useApp();
 
   const globalNavigationItems = [
     {
@@ -152,9 +154,9 @@ export function NewLayout({ children, onNewProject }: NewLayoutProps) {
   const currentNavigationItems = currentProject ? projectNavigationItems : globalNavigationItems;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card text-card-foreground shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -171,7 +173,15 @@ export function NewLayout({ children, onNewProject }: NewLayoutProps) {
               )}
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              >
+                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
               {!currentProject && (
                 <Button onClick={onNewProject} size="sm">
                   <Plus className="mr-2 h-4 w-4" />
@@ -214,20 +224,20 @@ export function NewLayout({ children, onNewProject }: NewLayoutProps) {
                         setGlobalView(item.key as any);
                       }
                     }}
-                    className={`w-full text-left p-3 rounded-lg transition-colors ${
+                    className={`w-full text-left p-3 rounded-lg transition-colors border ${
                       isActive
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                        ? 'bg-primary/5 text-primary border-primary/20'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground border-border'
                     }`}
                   >
                     <div className="flex items-center">
                       <Icon className={`h-5 w-5 mr-3 ${
-                        isActive ? 'text-blue-600' : 'text-gray-500'
+                        isActive ? 'text-primary' : 'text-muted-foreground'
                       }`} />
                       <div>
                         <div className="font-medium">{item.label}</div>
                         <div className={`text-xs mt-1 ${
-                          isActive ? 'text-blue-600' : 'text-gray-500'
+                          isActive ? 'text-primary' : 'text-muted-foreground'
                         }`}>
                           {item.description}
                         </div>
