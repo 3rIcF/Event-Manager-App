@@ -65,7 +65,7 @@ export function EventManager() {
   };
 
   const handleDeleteEvent = async (id: string) => {
-    if (!confirm('Möchten Sie dieses Event wirklich löschen?')) return;
+    if (!window.confirm('Möchten Sie dieses Event wirklich löschen?')) return;
     
     try {
       await eventService.deleteEvent(id);

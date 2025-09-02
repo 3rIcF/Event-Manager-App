@@ -88,7 +88,7 @@ export function ProjectsList({ onNewProject }: ProjectsListProps) {
     );
   };
 
-  const getDaysUntilStart = (startDate: string) => {
+  const getDaysUntilStart = (startDate: Date | string) => {
     const start = new Date(startDate);
     const today = new Date();
     return Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -192,7 +192,7 @@ export function ProjectsList({ onNewProject }: ProjectsListProps) {
                   <div className="flex-1 space-y-1">
                     <CardTitle className="text-lg leading-tight">{project.name}</CardTitle>
                     <div className="flex items-center gap-2">
-                      <Badge className={getStatusColor(project.status)} size="sm">
+                      <Badge className={getStatusColor(project.status)}>
                         {getStatusLabel(project.status)}
                       </Badge>
                       {isFavorite && (
@@ -245,7 +245,7 @@ export function ProjectsList({ onNewProject }: ProjectsListProps) {
                   
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <User className="w-4 h-4" />
-                    <span>{project.responsible}</span>
+                    <span>{project.manager}</span>
                   </div>
 
                   {project.budget && (

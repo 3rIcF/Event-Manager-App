@@ -107,7 +107,7 @@ export function DiffNotificationBanner() {
                       {notification.changes.length} Feld(er) geändert
                     </p>
                   </div>
-                  <Badge variant="outline" size="sm">
+                  <Badge variant="outline">
                     {notification.entityType}
                   </Badge>
                 </div>

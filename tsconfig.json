@@ -23,10 +23,9 @@
   },
   "include": [
     "components",
-    "App.tsx",
-    "src/index.tsx"
+    "src/**/*"
   ],
   "exclude": [
-    "src/components"
+    
   ]
 }
