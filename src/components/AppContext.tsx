@@ -24,6 +24,10 @@ interface AppContextType {
   projectView: 'dashboard' | 'bom' | 'procurement' | 'permits' | 'logistics' | 'services' | 'accommodation' | 'operations' | 'finances' | 'files' | 'completion';
   setProjectView: (view: 'dashboard' | 'bom' | 'procurement' | 'permits' | 'logistics' | 'services' | 'accommodation' | 'operations' | 'finances' | 'files' | 'completion') => void;
   
+  // Projects collection
+  projects: Project[];
+  addProject: (project: Omit<Project, 'id'>) => Project;
+  
   // User state
   currentUser: any | null;
   setCurrentUser: (user: any | null) => void;
@@ -52,6 +56,25 @@ export function AppProvider({ children }: AppProviderProps) {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([
+    {
+      id: '1',
+      name: 'Sommerfest 2024',
+      description: 'Jährliches Sommerfest mit Live-Musik und kulinarischen Highlights',
+      status: 'planning',
+      startDate: new Date(),
+      endDate: new Date(),
+      location: 'Berlin',
+      budget: 50000,
+      manager: 'admin',
+    },
+  ]);
+
+  const addProject = (project: Omit<Project, 'id'>): Project => {
+    const newProject: Project = { id: `${Date.now()}`, ...project };
+    setProjects(prev => [newProject, ...prev]);
+    return newProject;
+  };
 
   const addNotification = (notification: any) => {
     const newNotification = {
@@ -77,6 +100,8 @@ export function AppProvider({ children }: AppProviderProps) {
     setCurrentProject,
     projectView,
     setProjectView,
+    projects,
+    addProject,
     currentUser,
     setCurrentUser,
     theme,
