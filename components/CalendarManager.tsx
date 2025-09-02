@@ -158,7 +158,7 @@ export function CalendarManager() {
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
   const [filterProject, setFilterProject] = useState('all');
   const [filterType, setFilterType] = useState('all');
-  const [filterGate, setFilterGate] = useState('all');
+  const [filterGate, setFilterGate] = useState<string>('all');
   const [filterResource, setFilterResource] = useState('all');
   const [selectedSlot, setSelectedSlot] = useState<CalendarSlot | null>(null);
   const [showNewSlotDialog, setShowNewSlotDialog] = useState(false);
@@ -192,7 +192,7 @@ export function CalendarManager() {
   });
 
   // Get unique values for filters
-  const gates = [...new Set(mockSlots.filter(s => s.gate).map(s => s.gate))];
+  const gates = [...new Set(mockSlots.filter(s => s.gate).map(s => s.gate ?? ''))].filter(Boolean);
   const resources = [...new Set(mockSlots.flatMap(s => s.resources))];
 
   // Detect conflicts
@@ -251,7 +251,7 @@ export function CalendarManager() {
                         </div>
                         <div className="flex items-center gap-2">
                           {slot.resources.map(resource => (
-                            <Badge key={resource} variant="outline" size="sm">
+                            <Badge key={resource} variant="outline">
                               {resource === 'stapler' && <Forklift className="w-3 h-3 mr-1" />}
                               {resource}
                             </Badge>
@@ -288,11 +288,11 @@ export function CalendarManager() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium">{slot.title}</h4>
-                    <Badge className={getSlotColor(slot.type, slot.status)} size="sm">
+                    <Badge className={getSlotColor(slot.type, slot.status)}>
                       {slot.type}
                     </Badge>
                     {isGlobalView && slot.projectName && (
-                      <Badge variant="outline" size="sm">{slot.projectName}</Badge>
+                      <Badge variant="outline">{slot.projectName}</Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -320,7 +320,7 @@ export function CalendarManager() {
                   {slot.resources.length > 0 && (
                     <div className="flex gap-1 mt-2">
                       {slot.resources.map(resource => (
-                        <Badge key={resource} variant="secondary" size="sm">
+                        <Badge variant="secondary" key={resource}>
                           {resource === 'stapler' && <Forklift className="w-3 h-3 mr-1" />}
                           {resource}
                         </Badge>

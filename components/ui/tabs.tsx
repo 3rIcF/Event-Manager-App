@@ -52,8 +52,4 @@ const TabsContent = React.forwardRef<
 ))
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
-<<<<<<< Current (Your changes)
-export { Tabs, TabsList, TabsTrigger, TabsContent };
-=======
 export { Tabs, TabsList, TabsTrigger, TabsContent }
->>>>>>> Incoming (Background Agent changes)

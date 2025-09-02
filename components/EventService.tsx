@@ -1,4 +1,4 @@
-import { Event, CreateEventDto, UpdateEventDto, EventParticipant, CreateParticipantDto } from '../types/event';
+import { Event, CreateEventDto, UpdateEventDto, EventParticipant, CreateParticipantDto } from '../src/types/event';
 
 export class EventService {
   private baseUrl: string;

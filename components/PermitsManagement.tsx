@@ -284,9 +284,7 @@ export function PermitsManagement() {
                           {getCategoryIcon(permit.category)}
                           <span className="text-sm font-medium">{permit.name}</span>
                         </div>
-                        <Badge className={getPriorityColor(permit.priority)} size="sm">
-                          {permit.priority}
-                        </Badge>
+                        <Badge className="ml-2">{permit.priority}</Badge>
                       </div>
                       
                       <div className="text-xs text-muted-foreground mb-2">

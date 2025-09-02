@@ -123,7 +123,7 @@ export function ProjectDashboard() {
               </div>
               <div className="flex items-center gap-1">
                 <User className="w-4 h-4" />
-                <span>{currentProject.responsible}</span>
+                <span>{currentProject.manager}</span>
               </div>
               {currentProject.budget && (
                 <div className="flex items-center gap-1">
@@ -338,7 +338,6 @@ export function ProjectDashboard() {
                   </div>
                   <Badge 
                     variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'}
-                    size="sm"
                   >
                     {task.priority === 'high' ? 'Hoch' : task.priority === 'medium' ? 'Mittel' : 'Niedrig'}
                   </Badge>

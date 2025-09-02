@@ -42,6 +42,8 @@ model User {
   createdTasks Task[] @relation("TaskCreator")
   taskComments TaskComment[]
   uploadedFiles File[]
+  taskAttachmentsUploaded TaskAttachment[] @relation("TaskAttachmentUploader")
+  assignedKanbanCards KanbanCard[] @relation("KanbanCardAssignee")
   userPermissions UserPermission[]
   grantedPermissions UserPermission[] @relation("PermissionGranter")
   userSessions UserSession[]
@@ -188,6 +190,7 @@ model Project {
   tasks          Task[]
   files          File[]
   kanbanBoards   KanbanBoard[]
+  supplierContracts SupplierContract[]
 
   @@map("projects")
 }
@@ -439,7 +442,7 @@ model TaskAttachment {
   // Relations
   task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   file        File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
-  uploader    User     @relation(fields: [uploadedBy], references: [id])
+  uploader    User     @relation("TaskAttachmentUploader", fields: [uploadedBy], references: [id])
 
   @@map("task_attachments")
 }
@@ -503,7 +506,7 @@ model KanbanCard {
 
   // Relations
   column       KanbanColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  assignee     User?    @relation(fields: [assignedTo], references: [id])
+  assignee     User?    @relation("KanbanCardAssignee", fields: [assignedTo], references: [id])
 
   @@map("kanban_cards")
 }
